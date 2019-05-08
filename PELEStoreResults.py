@@ -17,20 +17,19 @@ __email__="sergi.rodallordes@bsc.es"
 
 # Functions
 def parseReports(reports_to_parse, parser):
-    """It identifies the reports to add to the plot
+    """It identifies the reports to add to the storing table
 
     PARAMETERS
     ----------
     reports_to_parse : list of strings
-                       all the report files that want to be added to the plot
+                       all the report files that want to be added to the storing table
     parser : ArgumentParser object
              contains information about the command line arguments
 
     RETURNS
     -------
     parsed_data : tuple of a list and a string
-                  the list specifies the report columns that want to be plotted
-                  in the axis and the string sets the name of the axis
+                  the list specifies the report files that will be stored in the csv file.
     """
 
     reports = []
@@ -57,12 +56,8 @@ def parseArgs():
     -------
     reports : string
               list of report files to look for data
-    energy : float
-              Cutoff of the binding energy
-    sasa :  float
-              Cutoff the SASA parameter
     output_path : string
-                  output directory where the resulting plot will be saved
+                  output directory where the csv file will be saved
     """
 
     parser = ap.ArgumentParser()
@@ -91,12 +86,12 @@ def Storeresults(reports):
     """
     Results = {}
     for report in reports:
-        reportID = str(os.path.basename(report).split('_')[-1].split('.')[0])
+        reportID = int(os.path.basename(report).split('_')[-1].split('.')[0])
         with open(report,'r') as report_file:
             if '0' not in Results:
                 line = report_file.readline()
-                Results['0'] = line.split()[3:(len(line.split()))]
-                Means = [[] for x in range(3,(len(line.split())))]
+                Results[0] = line.split()[3:(len(line.split()))]
+                Means = [[] for x in range(3,(len(line.split())-1))]
             else:
                 next(report_file)
             for i, line in enumerate(report_file):
@@ -115,8 +110,9 @@ def Outputresults(Results,output_path):
              dictionary containing the mean of the different quantitative parameters
     """
     Output_file = open(output_path,"wt")
-    for key,values in sorted(Results.items()):
-        Output_file.write(str(key)+','+",".join(values)+"\n")
+    Sorted_results = sorted(list(Results.items()))
+    for i in range(len(Sorted_results)):
+        Output_file.write(str(Sorted_results[i][0])+','+",".join(Sorted_results[i][1])+"\n")
     Output_file.close()
 
                 

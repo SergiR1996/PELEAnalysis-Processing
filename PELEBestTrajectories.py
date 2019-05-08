@@ -17,20 +17,19 @@ __email__="sergi.rodallordes@bsc.es"
 
 # Functions
 def parseReports(reports_to_parse, parser):
-    """It identifies the reports to add to the plot
+    """It identifies the reports to add to the output file
 
     PARAMETERS
     ----------
     reports_to_parse : list of strings
-                       all the report files that want to be added to the plot
+                       all the report files that want to be tested as best trajectories
     parser : ArgumentParser object
              contains information about the command line arguments
 
     RETURNS
     -------
     parsed_data : tuple of a list and a string
-                  the list specifies the report columns that want to be plotted
-                  in the axis and the string sets the name of the axis
+                  the list specifies the report columns that want to be stored as the best trajectories
     """
 
     reports = []
@@ -63,7 +62,7 @@ def parseArgs():
     sasa :  float
               Cutoff the SASA parameter
     output_path : string
-                  output directory where the resulting plot will be saved
+                  output directory where the resulting best trajectories will be saved
     """
 
     parser = ap.ArgumentParser()
@@ -77,18 +76,20 @@ def parseArgs():
                           help="Cutoff of the binding energy", default=-50.0)
     optional.add_argument("-S", "--sasa", metavar="METRIC", type=float,
                           help="Cutoff of the SASA parameter", default=0.3)
+    optional.add_argument("-M","--metric",metavar="NUMBER",type=int,
+                          help="Number of the column where the metric resides", default=5)
     parser._action_groups.append(optional)
     args = parser.parse_args()
 
     reports = parseReports(args.input, parser)
 
     output_path = args.output
-    energy,sasa = args.energy,args.sasa
+    energy,sasa,metric = args.energy,args.sasa,args.metric
 
-    return reports, energy, sasa, output_path
+    return reports, energy, sasa, output_path,metric
 
 
-def Storebesttrajectories(reports,energy=-50.0,sasa=0.3):
+def Storebesttrajectories(reports,metric,energy=-50.0,sasa=0.3):
     """It looks on the report files and finds the best trajectories (the minima).
 
     RETURNS
@@ -110,10 +111,10 @@ def Storebesttrajectories(reports,energy=-50.0,sasa=0.3):
             next(report_file)
             for i, line in enumerate(report_file):
                 if float(line.split()[4])<=energy:
-                    if round(float(line.split()[5]))%5<=2:
-                        Distance=(round(float(line.split()[5]))-(round(float(line.split()[5]))%5))
+                    if round(float(line.split()[metric]))%5<=2:
+                        Distance=(round(float(line.split()[metric]))-(round(float(line.split()[metric]))%5))
                     else:
-                        Distance=(round(float(line.split()[5]))+5-(round(float(line.split()[5]))%5))
+                        Distance=(round(float(line.split()[metric]))+5-(round(float(line.split()[metric]))%5))
                     if Distance not in Below50:
                         Below50[Distance]=[]
                     if reportID not in Below50[Distance]:
@@ -129,10 +130,10 @@ def Storebesttrajectories(reports,energy=-50.0,sasa=0.3):
                             if reportID not in Below60[Distance]:
                                 Below60[Distance].append(reportID)
                 if float(line.split()[len(line.split())-1])<=sasa:
-                    if round(float(line.split()[5]))%5<=2:
-                        DistSASA=(round(float(line.split()[5]))-(round(float(line.split()[5]))%5))
+                    if round(float(line.split()[metric]))%5<=2:
+                        DistSASA=(round(float(line.split()[metric]))-(round(float(line.split()[metric]))%5))
                     else:
-                        DistSASA=(round(float(line.split()[5]))+5-(round(float(line.split()[5]))%5))
+                        DistSASA=(round(float(line.split()[metric]))+5-(round(float(line.split()[metric]))%5))
                     if DistSASA not in Sasa03:
                         Sasa03[DistSASA]=[]
                     if reportID not in Sasa03[DistSASA]:
@@ -172,10 +173,10 @@ def main():
     """
 
     # Parse command-line arguments
-    reports, energy, sasa, output_path = parseArgs()
+    reports, energy, sasa, output_path, metric = parseArgs()
 
     # Store the best trajectories
-    Report_data_1,Report_data_2,Report_data_3,Report_data_4=Storebesttrajectories(reports,energy,sasa)
+    Report_data_1,Report_data_2,Report_data_3,Report_data_4=Storebesttrajectories(reports,metric,energy,sasa)
 
     # Generate the report file with the best trajectories
     Reportbesttrajectories(Report_data_1,Report_data_2,Report_data_3,Report_data_4,energy,sasa,output_path)
