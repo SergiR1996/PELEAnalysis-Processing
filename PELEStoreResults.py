@@ -90,7 +90,7 @@ def Storeresults(reports):
         with open(report,'r') as report_file:
             if '0' not in Results:
                 line = report_file.readline()
-                Results[0] = line.split()[3:(len(line.split()))]
+                Results[0] = line.split("    ")[3:(len(line.split())-1)]
                 Means = [[] for x in range(3,(len(line.split())-1))]
             else:
                 next(report_file)
