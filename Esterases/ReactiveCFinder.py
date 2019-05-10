@@ -101,19 +101,18 @@ def main():
 
     # Get the reactive C and store them in the output file.
     Dict_file=open("Ligand_file","wt")
-    i=0
+
     for PDB in PDB_List:
         Results = ReactiveCFinder(PDB)
-        if i==0:
+        if PDB==PDB_List[0]:
             for PDB,reactive_C in Results.items():
                 Dict_file.write("Protein dict = {" + '"' + str(PDB) + '"' + ": " + str(reactive_C) + ", ")
-        elif i==(len(PDB_List)-1):
+        elif PDB==PDB_List[-1]:
             for PDB,reactive_C in Results.items():
                 Dict_file.write('"' + str(PDB) + '"' + ": " + str(reactive_C) + "}")
         else:
             for PDB,reactive_C in Results.items():
                 Dict_file.write('"' + str(PDB) + '"' + ": " + str(reactive_C) + ", ")
-        i+=1
 
 
 

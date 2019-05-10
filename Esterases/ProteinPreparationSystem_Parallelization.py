@@ -116,9 +116,9 @@ def main():
     PDB_List = glob.glob("*.pdb")
 
     # Get the protein in the PDB file and prepare it by adding H and performing the good protonations using parallelization.
-    pool = mp.Pool(6)
-    pool.map(ProteinPreparationSystem, PDB_List)
-    pool.terminate()
+    pool = mp.Pool(6) # In this part, the number of processors/cores is set.
+    pool.map(ProteinPreparationSystem, PDB_List) # The function is called by the list of PDB files iteratively using parallelization.
+    pool.terminate() # The parallelization and use of cores is killed once the job has finished.
 
 
 
