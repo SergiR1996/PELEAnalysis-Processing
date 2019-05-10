@@ -87,14 +87,24 @@ def ActiveSiteFinder(PDBfilename,Ser_list,His_list,Acid_list):
     Results = {}
     for residue_H in His_list:
         for residue_S in Ser_list:
-            if abs(residue_S["HG"]-residue_H["NE2"])<=3:
-                for residue_A in Acid_list:
-                    if residue_A.get_resname()=="ASP":
-                        if (residue_A["OD1"]-residue_H["HD1"])<=2.4 or (residue_A["OD2"]-residue_H["HD1"])<=2.4:
-                            Results[PDBfilename] = [residue_S.id[1],residue_H.id[1],residue_A.id[1],0]
-                    elif residue_A.get_resname()=="GLU":
-                        if (residue_A["OE1"] - residue_H["HD1"]) <= 2.4 or (residue_A["OE2"] - residue_H["HD1"]) <= 2.4:
-                            Results[PDBfilename] = [residue_S.id[1],residue_H.id[1],residue_A.id[1],1]
+            try:
+                if abs(residue_S["HG"]-residue_H["NE2"])<=3:
+                    for residue_A in Acid_list:
+                        if residue_A.get_resname()=="ASP":
+                            if (residue_A["OD1"]-residue_H["HD1"])<=2.4 or (residue_A["OD2"]-residue_H["HD1"])<=2.4:
+                                Results[PDBfilename] = [residue_S.id[1],residue_H.id[1],residue_A.id[1],0]
+                        elif residue_A.get_resname()=="GLU":
+                            if (residue_A["OE1"] - residue_H["HD1"]) <= 2.4 or (residue_A["OE2"] - residue_H["HD1"]) <= 2.4:
+                                Results[PDBfilename] = [residue_S.id[1],residue_H.id[1],residue_A.id[1],1]
+            except KeyError:
+                if abs(residue_S["OG"] - residue_H["NE2"]) <= 3.5:
+                    for residue_A in Acid_list:
+                        if residue_A.get_resname() == "ASP":
+                            if (residue_A["OD1"] - residue_H["HD1"]) <= 2.4 or (residue_A["OD2"] - residue_H["HD1"]) <= 2.4:
+                                Results[PDBfilename] = [residue_S.id[1], residue_H.id[1], residue_A.id[1], 0]
+                        elif residue_A.get_resname() == "GLU":
+                            if (residue_A["OE1"] - residue_H["HD1"]) <= 2.4 or (residue_A["OE2"] - residue_H["HD1"]) <= 2.4:
+                                Results[PDBfilename] = [residue_S.id[1], residue_H.id[1], residue_A.id[1], 1]
 
     return Results
 
@@ -110,22 +120,22 @@ def main():
     # Store PDB filenames on a list
     PDB_List = parseArgs()
 
+
     # Get the Ser, His, Asp and/or Glu residues and store the ones that are in the active site in the output file.
     Dict_file=open("Dict_file","wt")
-    i=0
     for PDB in PDB_List:
+
         Ser_List,His_List,Acid_List = PDBopener(PDB)
         Results = ActiveSiteFinder(PDB,Ser_List,His_List,Acid_List)
-        if i==0:
-            for PDB,residues in Results.items():
-                Dict_file.write("Protein dict = {"+ '"' + str(PDB) + '"' + ": " + str(residues) + ", ")
-        elif i==(len(PDB_List)-1):
-            for PDB,residues in Results.items():
-                Dict_file.write('"' + str(PDB) + '"' + ": " + str(residues) +"}")
+        if PDB==PDB_List[0]:
+            for key,residues in Results.items():
+                Dict_file.write("Protein dict = {"+ '"' + str(key) + '"' + ": " + str(residues) + ", ")
+        elif PDB==PDB_List[-1]:
+            for key,residues in Results.items():
+                Dict_file.write('"' + str(key) + '"' + ": " + str(residues) +"}")
         else:
-            for PDB,residues in Results.items():
-                Dict_file.write('"' + str(PDB) + '"' + ": " + str(residues) + ", ")
-        i+=1
+            for key,residues in Results.items():
+                Dict_file.write('"' + str(key) + '"' + ": " + str(residues) + ", ")
 
 
 

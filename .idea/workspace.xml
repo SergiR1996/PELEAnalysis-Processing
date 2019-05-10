@@ -3,7 +3,16 @@
   <component name="ChangeListManager">
     <list default="true" id="66e56163-dd1b-4986-8e1b-d4b093190594" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PELEStoreResults.py" beforeDir="false" afterPath="$PROJECT_DIR$/PELEStoreResults.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ActiveSiteFinder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PELEAnalysis-Processing.Rproj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PELEBestTrajectories.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PELEPlot2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PELEPlot3.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PELEStoreResults.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PELE_mean_analysis.R" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PETase_Manuel_2HEMHET_D238SL272D.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProteinPreparationSystem.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ReactiveCFinder.py" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -13,28 +22,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ActiveSiteFinder.py">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Esterases/ProteinPreparationSystem_Parallelization.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="754">
-              <caret line="104" column="19" selection-start-line="104" selection-start-column="19" selection-end-line="104" selection-end-column="19" />
-              <folding>
-                <element signature="e#37#50#0" expanded="true" />
-              </folding>
-            </state>
+            <state relative-caret-position="-1062" />
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/PELEStoreResults.py">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Esterases/ActiveSiteFinder.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="480">
-              <caret line="92" column="45" selection-start-line="92" selection-start-column="45" selection-end-line="92" selection-end-column="45" />
-              <folding>
-                <element signature="e#36#75#0" expanded="true" />
-              </folding>
-            </state>
+            <state relative-caret-position="-437" />
           </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Esterases/ProteinPreparationSystem.py">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
     </leaf>
@@ -47,6 +51,7 @@
       <list>
         <option value="$PROJECT_DIR$/PELEBestTrajectories.py" />
         <option value="$PROJECT_DIR$/PELEStoreResults.py" />
+        <option value="$PROJECT_DIR$/ProteinPreparationSystem.py" />
       </list>
     </option>
   </component>
@@ -72,7 +77,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -80,15 +84,21 @@
               <item name="PELEAnalysis-Processing" type="b2602c69:ProjectViewProjectNode" />
               <item name="PELEAnalysis-Processing" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="PELEAnalysis-Processing" type="b2602c69:ProjectViewProjectNode" />
+              <item name="PELEAnalysis-Processing" type="462c0819:PsiDirectoryNode" />
+              <item name="Esterases" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$USER_HOME$/PycharmProjects/ActiveSiteFinder" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -116,10 +126,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="64" y="-4" width="1217" height="1029" extended-state="6" />
+    <frame x="65" y="-4" width="1215" height="1028" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2540633" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.23952095" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -141,19 +151,41 @@
     </layout>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/PETase_Manuel_2HEMHET_D238SL272D.csv" />
     <entry file="file://$PROJECT_DIR$/PDBProcessor4PELE.py">
-      <provider selected="true" editor-type-id="text-editor" />
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="559">
+          <caret line="57" column="69" selection-start-line="57" selection-start-column="69" selection-end-line="57" selection-end-column="69" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ProteinPreparationSystem.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="244">
+          <caret line="74" column="25" selection-start-line="74" selection-start-column="25" selection-end-line="74" selection-end-column="25" />
+        </state>
+      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/PELEBestTrajectories.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="24" column="87" selection-start-line="24" selection-start-column="87" selection-end-line="24" selection-end-column="87" />
+        <state relative-caret-position="450">
+          <caret line="69" column="23" selection-start-line="69" selection-start-column="23" selection-end-line="69" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PELEStoreResults.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="258">
+          <caret line="92" column="45" selection-start-line="92" selection-start-column="45" selection-end-line="92" selection-end-column="45" />
+          <folding>
+            <element signature="e#36#75#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ActiveSiteFinder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="754">
+        <state relative-caret-position="843">
           <caret line="104" column="19" selection-start-line="104" selection-start-column="19" selection-end-line="104" selection-end-column="19" />
           <folding>
             <element signature="e#37#50#0" expanded="true" />
@@ -161,17 +193,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PETase_Manuel_2HEMHET_D238SL272D.csv">
+    <entry file="file://$PROJECT_DIR$/Esterases/ActiveSiteFinder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-437" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Esterases/ProteinPreparationSystem.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/PELEStoreResults.py">
+    <entry file="file://$PROJECT_DIR$/Esterases/ProteinPreparationSystem_Parallelization.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="480">
-          <caret line="92" column="45" selection-start-line="92" selection-start-column="45" selection-end-line="92" selection-end-column="45" />
-          <folding>
-            <element signature="e#36#75#0" expanded="true" />
-          </folding>
-        </state>
+        <state relative-caret-position="-1062" />
       </provider>
     </entry>
   </component>
