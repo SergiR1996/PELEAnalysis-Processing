@@ -106,7 +106,7 @@ def main():
         Results = ReactiveCFinder(PDB)
         if PDB==PDB_List[0]:
             for PDB,reactive_C in Results.items():
-                Dict_file.write("Protein dict = {" + '"' + str(PDB) + '"' + ": " + str(reactive_C) + ", ")
+                Dict_file.write("Ligand_dict = {" + '"' + str(PDB) + '"' + ": " + str(reactive_C) + ", ")
         elif PDB==PDB_List[-1]:
             for PDB,reactive_C in Results.items():
                 Dict_file.write('"' + str(PDB) + '"' + ": " + str(reactive_C) + "}")

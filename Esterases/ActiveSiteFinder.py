@@ -122,14 +122,14 @@ def main():
 
 
     # Get the Ser, His, Asp and/or Glu residues and store the ones that are in the active site in the output file.
-    Dict_file=open("Dict_file","wt")
+    Dict_file=open("PDict_file","wt")
     for PDB in PDB_List:
 
         Ser_List,His_List,Acid_List = PDBopener(PDB)
         Results = ActiveSiteFinder(PDB,Ser_List,His_List,Acid_List)
         if PDB==PDB_List[0]:
             for key,residues in Results.items():
-                Dict_file.write("Protein dict = {"+ '"' + str(key) + '"' + ": " + str(residues) + ", ")
+                Dict_file.write("Protein_dict = {"+ '"' + str(key) + '"' + ": " + str(residues) + ", ")
         elif PDB==PDB_List[-1]:
             for key,residues in Results.items():
                 Dict_file.write('"' + str(key) + '"' + ": " + str(residues) +"}")

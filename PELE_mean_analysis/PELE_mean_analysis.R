@@ -61,6 +61,7 @@ ggcorrplot(corr,   ggtheme = ggplot2::theme_gray,
 # MD_simulations_results
 
 # WT data frame
+
 WT_MD_results_1 <- read.table(file="Results/MD_WT/ServsHis.dat")
 WT_MD_results_2 <- read.table(file="Results/MD_WT/AspOD1vsHis.dat")
 WT_MD_results_3 <- read.table(file="Results/MD_WT/AspOD2vsHis.dat")
@@ -68,6 +69,84 @@ WT_MD_results <- WT_MD_results_1
 WT_MD_results <- cbind(WT_MD_results,WT_MD_results_2[,2])
 WT_MD_results <- cbind(WT_MD_results,WT_MD_results_3[,2])
 names(WT_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist")
+
+# D238SL272D data frame
+
+L272D_MD_results_1 <- read.table(file="Results/MD_L272D/ServsHis.dat")
+L272D_MD_results_2 <- read.table(file="Results/MD_L272D/AspOD1vsHis.dat")
+L272D_MD_results_3 <- read.table(file="Results/MD_L272D/AspOD2vsHis.dat")
+L272D_MD_results_4 <- read.table(file="Results/MD_L272D/Ser238vsHis.dat")
+L272D_MD_results_5 <- read.table(file="Results/MD_L272D/Asp272OD1vsHis.dat")
+L272D_MD_results_6 <- read.table(file="Results/MD_L272D/Asp272OD2vsHis.dat")
+L272D_MD_results <- L272D_MD_results_1
+L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_2[,2]);L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_3[,2])
+L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_4[,2]);L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_5[,2])
+L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_6[,2])
+names(L272D_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist","Ser238vsHis_dist","Asp272OD1vsHis_dist","Asp272OD2vsHis_dist")
+
+ServsHisdiffL272D <- wilcox.test(L272D_MD_results[,2],WT_MD_results[,2], alternative="greater",mu=0.06)$p.value
+AspOD1vsHisdiffL272D <- wilcox.test(L272D_MD_results[,4],WT_MD_results[,4], alternative="less",mu=-0.02)$p.value
+Ser238vsHisdiffL272D <- wilcox.test(L272D_MD_results[,5],L272D_MD_results[,2], alternative="greater",mu=0.9)$p.value
+Asp272vsHisdiffL272D <- wilcox.test(L272D_MD_results[,6],L272D_MD_results[,4], alternative="greater",mu=3.4)$p.value
+
+# D238SW269D data frame
+
+W269D_MD_results_1 <- read.table(file="Results/MD_W269D/ServsHis.dat")
+W269D_MD_results_2 <- read.table(file="Results/MD_W269D/AspOD1vsHis.dat")
+W269D_MD_results_3 <- read.table(file="Results/MD_W269D/AspOD2vsHis.dat")
+W269D_MD_results_4 <- read.table(file="Results/MD_W269D/Ser238vsHis.dat")
+W269D_MD_results_5 <- read.table(file="Results/MD_W269D/Asp269OD1vsHis.dat")
+W269D_MD_results_6 <- read.table(file="Results/MD_W269D/Asp269OD2vsHis.dat")
+W269D_MD_results <- W269D_MD_results_1
+W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_2[,2]);W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_3[,2])
+W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_4[,2]);W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_5[,2])
+W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_6[,2])
+names(W269D_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist","Ser238vsHis_dist","Asp272OD1vsHis_dist","Asp272OD2vsHis_dist")
+summary(W269D_MD_results)
+ServsHisdiffW269D <- wilcox.test(W269D_MD_results[,2],WT_MD_results[,2], alternative="greater",mu=0.08)$p.value
+AspOD1vsHisdiffW269D <- wilcox.test(W269D_MD_results[,4],WT_MD_results[,4], alternative="greater",mu=0.04)$p.value
+Ser238vsHisdiffW269D <- wilcox.test(W269D_MD_results[,5],W269D_MD_results[,2], alternative="less",mu=-0.6)$p.value
+Asp269vsHisdiffW269D <- wilcox.test(W269D_MD_results[,6],W269D_MD_results[,4], alternative="greater",mu=0.125)$p.value
+summary(W269D_MD_results)
+# S278K data frame
+
+S278K_MD_results_1 <- read.table(file="Results/MD_S278K/ServsHis.dat")
+S278K_MD_results_2 <- read.table(file="Results/MD_S278K/AspOD1vsHis.dat")
+S278K_MD_results_3 <- read.table(file="Results/MD_S278K/AspOD2vsHis.dat")
+S278K_MD_results_4 <- read.table(file="Results/MD_S278K/Ser238vsHis.dat")
+S278K_MD_results_5 <- read.table(file="Results/MD_S278K/Asp272OD1vsHis.dat")
+S278K_MD_results_6 <- read.table(file="Results/MD_S278K/Asp272OD2vsHis.dat")
+S278K_MD_results <- S278K_MD_results_1
+S278K_MD_results <- cbind(S278K_MD_results,S278K_MD_results_2[,2]);S278K_MD_results <- cbind(S278K_MD_results,S278K_MD_results_3[,2])
+S278K_MD_results <- cbind(S278K_MD_results,S278K_MD_results_4[,2]);S278K_MD_results <- cbind(S278K_MD_results,S278K_MD_results_5[,2])
+S278K_MD_results <- cbind(S278K_MD_results,S278K_MD_results_6[,2])
+names(S278K_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist","Ser238vsHis_dist","Asp272OD1vsHis_dist","Asp272OD2vsHis_dist")
+
+ServsHisdiffS278K <- wilcox.test(S278K_MD_results[,2],WT_MD_results[,2], alternative="less",mu=-0.06)$p.value
+AspOD1vsHisdiffS278K <- wilcox.test(S278K_MD_results[,4],WT_MD_results[,4], alternative="less",mu=-0.03)$p.value
+Ser238vsHisdiffS278K <- wilcox.test(S278K_MD_results[,5],S278K_MD_results[,2], alternative="greater",mu=0.55)$p.value
+Asp272vsHisdiffS278K <- wilcox.test(S278K_MD_results[,7],S278K_MD_results[,4], alternative="greater",mu=2.65)$p.value
+
+# S278R data frame
+
+S278R_MD_results_1 <- read.table(file="Results/MD_S278R/ServsHis.dat")
+S278R_MD_results_2 <- read.table(file="Results/MD_S278R/AspOD1vsHis.dat")
+S278R_MD_results_3 <- read.table(file="Results/MD_S278R/AspOD2vsHis.dat")
+S278R_MD_results_4 <- read.table(file="Results/MD_S278R/Ser238vsHis.dat")
+S278R_MD_results_5 <- read.table(file="Results/MD_S278R/Asp272OD1vsHis.dat")
+S278R_MD_results_6 <- read.table(file="Results/MD_S278R/Asp272OD2vsHis.dat")
+S278R_MD_results <- S278R_MD_results_1
+S278R_MD_results <- cbind(S278R_MD_results,S278R_MD_results_2[,2]);S278R_MD_results <- cbind(S278R_MD_results,S278R_MD_results_3[,2])
+S278R_MD_results <- cbind(S278R_MD_results,S278R_MD_results_4[,2]);S278R_MD_results <- cbind(S278R_MD_results,S278R_MD_results_5[,2])
+S278R_MD_results <- cbind(S278R_MD_results,S278R_MD_results_6[,2])
+names(S278R_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist","Ser238vsHis_dist","Asp272OD1vsHis_dist","Asp272OD2vsHis_dist")
+
+ServsHisdiffS278R <- wilcox.test(S278R_MD_results[,2],WT_MD_results[,2], alternative="greater",mu=0.08)$p.value
+AspOD1vsHisdiffS278R <- wilcox.test(S278R_MD_results[,4],WT_MD_results[,4], alternative="greater",mu=0.16)$p.value
+Ser238vsHisdiffS278R <- wilcox.test(S278R_MD_results[,5],S278R_MD_results[,2], alternative="less",mu=-0.25)$p.value
+Asp272vsHisdiffS278R <- wilcox.test(S278R_MD_results[,6],S278R_MD_results[,3], alternative="greater",mu=2.5)$p.value
+
+summary(S278R_MD_results)
 
 # K281L data frame
 
@@ -83,11 +162,11 @@ K281L_MD_results <- cbind(K281L_MD_results,K281L_MD_results_4[,2]);K281L_MD_resu
 K281L_MD_results <- cbind(K281L_MD_results,K281L_MD_results_6[,2])
 names(K281L_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist","Ser238vsHis_dist","Asp272OD1vsHis_dist","Asp272OD2vsHis_dist")
 
-ServsHisdiffK281L <- wilcox.test(K281L_MD_results[,2],WT_MD_results[,2], alternative="greater",mu=0.11)$p.value
+ServsHisdiffK281L <- wilcox.test(K281L_MD_results[,2],WT_MD_results[,2], alternative="greater",mu=0.12)$p.value
 AspOD1vsHisdiffK281L <- wilcox.test(K281L_MD_results[,3],WT_MD_results[,4], alternative="greater",mu=0.06)$p.value
 Ser238vsHisdiffK281L <- wilcox.test(K281L_MD_results[,5],K281L_MD_results[,2], alternative="less",mu=-0.75)$p.value
 Asp272vsHisdiffK281L <- wilcox.test(K281L_MD_results[,6],K281L_MD_results[,3], alternative="greater",mu=2.56)$p.value
-
+summary(K281L_MD_results)
 # -----------------------------
   
 # Tools to visualize the datasets individually
