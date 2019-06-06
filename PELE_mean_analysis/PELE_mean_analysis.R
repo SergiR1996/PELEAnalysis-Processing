@@ -1,5 +1,5 @@
 # Adding the e1071 library to calculate the skewness of the sets of the data.
-install.packages("e1071")
+#install.packages("e1071")
 library(e1071)
 
 # The datasets of PELE results are loaded for the different mutants
@@ -50,7 +50,7 @@ ANOVA_SASASer238vsHis <- aov(SASASer238vsHis~mutants,data = SASASer238vsHis_data
 TukeyHSD(ANOVA_SASASer238vsHis);plot(TukeyHSD(ANOVA_SASASer238vsHis),las=2,cex=0.5,col="darkblue")+mtext("SASA of nucleophile O of Ser of potential active site",line=0.5)
 
 # Test the correlation between all the sets of the data
-install.packages("ggpubr");install.packages("ggcorrplot")
+#install.packages("ggpubr");install.packages("ggcorrplot")
 library(ggpubr);library(ggcorrplot)
 corr <- round(cor(WT_results[,6:10]),3)
 p.mat <- cor_pmat(WT_results[,6:10])
@@ -61,6 +61,7 @@ ggcorrplot(corr,   ggtheme = ggplot2::theme_gray,
 # MD_simulations_results
 
 # WT data frame
+setwd("/home/sergiroda/repos/PELEAnalysis-Processing/PELE_mean_analysis")
 
 WT_MD_results_1 <- read.table(file="Results/MD_WT/ServsHis.dat")
 WT_MD_results_2 <- read.table(file="Results/MD_WT/AspOD1vsHis.dat")
@@ -69,6 +70,8 @@ WT_MD_results <- WT_MD_results_1
 WT_MD_results <- cbind(WT_MD_results,WT_MD_results_2[,2])
 WT_MD_results <- cbind(WT_MD_results,WT_MD_results_3[,2])
 names(WT_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist")
+summary(WT_MD_results)
+sd(WT_MD_results[,4])
 
 # D238SL272D data frame
 
@@ -83,6 +86,11 @@ L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_2[,2]);L272D_MD_resu
 L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_4[,2]);L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_5[,2])
 L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_6[,2])
 names(L272D_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist","Ser238vsHis_dist","Asp272OD1vsHis_dist","Asp272OD2vsHis_dist")
+
+xlim <- range(W269D_MD_results[,2],L272D_MD_results[,5])
+plot(density(W269D_MD_results[,2]),xlim=xlim)
+summary(W269D_MD_results)
+lines(density(W269D_MD_results[,5]),col=3)
 
 ServsHisdiffL272D <- wilcox.test(L272D_MD_results[,2],WT_MD_results[,2], alternative="greater",mu=0.06)$p.value
 AspOD1vsHisdiffL272D <- wilcox.test(L272D_MD_results[,4],WT_MD_results[,4], alternative="less",mu=-0.02)$p.value
@@ -101,13 +109,31 @@ W269D_MD_results <- W269D_MD_results_1
 W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_2[,2]);W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_3[,2])
 W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_4[,2]);W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_5[,2])
 W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_6[,2])
-names(W269D_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist","Ser238vsHis_dist","Asp272OD1vsHis_dist","Asp272OD2vsHis_dist")
+names(W269D_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist","Ser238vsHis_dist","Asp269OD1vsHis_dist","Asp269OD2vsHis_dist")
 summary(W269D_MD_results)
 ServsHisdiffW269D <- wilcox.test(W269D_MD_results[,2],WT_MD_results[,2], alternative="greater",mu=0.08)$p.value
 AspOD1vsHisdiffW269D <- wilcox.test(W269D_MD_results[,4],WT_MD_results[,4], alternative="greater",mu=0.04)$p.value
 Ser238vsHisdiffW269D <- wilcox.test(W269D_MD_results[,5],W269D_MD_results[,2], alternative="less",mu=-0.6)$p.value
 Asp269vsHisdiffW269D <- wilcox.test(W269D_MD_results[,6],W269D_MD_results[,4], alternative="greater",mu=0.125)$p.value
 summary(W269D_MD_results)
+sd(W269D_MD_results[,2]);sd(W269D_MD_results[,5])
+sd(W269D_MD_results[,4]);sd(W269D_MD_results[,6])
+
+ggplot()+geom_density(data=W269D_MD_results,aes(ServsHis_dist,fill="ServsHis"),
+                      bw=0.1,alpha=0.5)+
+  geom_density(data=W269D_MD_results,aes(Ser238vsHis_dist,fill="Ser238vsHis"),
+               bw=0.1,alpha=0.5)+theme_minimal()+
+  guides(fill=guide_legend(title="Metric"))+
+  scale_fill_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))+
+  scale_color_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))
+
+ggplot()+geom_density(data=W269D_MD_results,aes(AspOD2vsHis_dist,fill="AspvsHis"),
+                      bw=0.1,alpha=0.5)+
+  geom_density(data=W269D_MD_results,aes(Asp269OD1vsHis_dist,fill="Asp269vsHis"),
+               bw=0.1,alpha=0.5)+theme_minimal()+
+  guides(fill=guide_legend(title="Metric"))+
+  scale_fill_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))+
+  scale_color_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))
 # S278K data frame
 
 S278K_MD_results_1 <- read.table(file="Results/MD_S278K/ServsHis.dat")
@@ -167,6 +193,45 @@ AspOD1vsHisdiffK281L <- wilcox.test(K281L_MD_results[,3],WT_MD_results[,4], alte
 Ser238vsHisdiffK281L <- wilcox.test(K281L_MD_results[,5],K281L_MD_results[,2], alternative="less",mu=-0.75)$p.value
 Asp272vsHisdiffK281L <- wilcox.test(K281L_MD_results[,6],K281L_MD_results[,3], alternative="greater",mu=2.56)$p.value
 summary(K281L_MD_results)
+
+# W269D_A240L
+
+W269D_MD_results_1 <- read.table(file="Results/MD_A240L/ServsHis.dat")
+W269D_MD_results_2 <- read.table(file="Results/MD_A240L/AspOD1vsHis.dat")
+W269D_MD_results_3 <- read.table(file="Results/MD_A240L/AspOD2vsHis.dat")
+W269D_MD_results_4 <- read.table(file="Results/MD_A240L/Ser238vsHis.dat")
+W269D_MD_results_5 <- read.table(file="Results/MD_A240L/Asp269OD1vsHis.dat")
+W269D_MD_results_6 <- read.table(file="Results/MD_A240L/Asp269OD2vsHis.dat")
+W269D_MD_results <- W269D_MD_results_1
+W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_2[,2]);W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_3[,2])
+W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_4[,2]);W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_5[,2])
+W269D_MD_results <- cbind(W269D_MD_results,W269D_MD_results_6[,2])
+names(W269D_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist","Ser238vsHis_dist","Asp269OD1vsHis_dist","Asp269OD2vsHis_dist")
+summary(W269D_MD_results)
+ServsHisdiffW269D <- wilcox.test(W269D_MD_results[,2],WT_MD_results[,2], alternative="greater",mu=0.08)$p.value
+AspOD1vsHisdiffW269D <- wilcox.test(W269D_MD_results[,4],WT_MD_results[,4], alternative="greater",mu=0.04)$p.value
+Ser238vsHisdiffW269D <- wilcox.test(W269D_MD_results[,5],W269D_MD_results[,2], alternative="less",mu=-0.6)$p.value
+Asp269vsHisdiffW269D <- wilcox.test(W269D_MD_results[,6],W269D_MD_results[,4], alternative="greater",mu=0.125)$p.value
+summary(W269D_MD_results)
+sd(W269D_MD_results[,2]);sd(W269D_MD_results[,5])
+sd(W269D_MD_results[,4]);sd(W269D_MD_results[,6])
+
+ggplot()+geom_density(data=W269D_MD_results,aes(ServsHis_dist,fill="ServsHis"),
+                      bw=0.1,alpha=0.5)+
+  geom_density(data=W269D_MD_results,aes(Ser238vsHis_dist,fill="Ser238vsHis"),
+               bw=0.1,alpha=0.5)+theme_minimal()+
+  guides(fill=guide_legend(title="Metric"))+
+  scale_fill_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))+
+  scale_color_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))
+
+ggplot()+geom_density(data=W269D_MD_results,aes(AspOD2vsHis_dist,fill="AspvsHis"),
+                      bw=0.1,alpha=0.5)+
+  geom_density(data=W269D_MD_results,aes(Asp269OD2vsHis_dist,fill="Asp269vsHis"),
+               bw=0.1,alpha=0.5)+theme_minimal()+
+  guides(fill=guide_legend(title="Metric"))+
+  scale_fill_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))+
+  scale_color_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))
+
 # -----------------------------
   
 # Tools to visualize the datasets individually

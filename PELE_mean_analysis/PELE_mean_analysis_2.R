@@ -1,5 +1,5 @@
 # Adding the e1071 library to calculate the skewness of the sets of the data.
-install.packages("e1071")
+# install.packages("e1071")
 library(e1071)
 
 # The datasets of PELE results are loaded for the different mutants
@@ -47,7 +47,7 @@ TukeyHSD(ANOVA_SASASer238vsHis);plot(TukeyHSD(ANOVA_SASASer238vsHis),las=2,cex=0
 
 
 # Test the correlation between all the sets of the data
-install.packages("ggpubr");install.packages("ggcorrplot")
+# install.packages("ggpubr");install.packages("ggcorrplot")
 library(ggpubr);library(ggcorrplot)
 corr <- round(cor(WT_results[,6:10]),3)
 p.mat <- cor_pmat(WT_results[,6:10])
@@ -130,3 +130,46 @@ AspOD1vsHisdiffL272D <- wilcox.test(L272D_MD_results[,4],WT_MD_results[,4], alte
 Ser238vsHisdiffL272D <- wilcox.test(L272D_MD_results[,5],L272D_MD_results[,2], alternative="greater",mu=1.4)$p.value
 Asp272vsHisdiffL272D <- wilcox.test(L272D_MD_results[,6],L272D_MD_results[,4], alternative="greater",mu=3.4)$p.value
 GluvsHisdiffL272D <- wilcox.test(L272D_MD_results[,9],L272D_MD_results[,4], alternative="greater",mu=0.7)$p.value
+
+# T124L
+
+L272D_MD_results_1 <- read.table(file="Results2/MD_T124L/ServsHis.dat")
+L272D_MD_results_2 <- read.table(file="Results2/MD_T124L/AspOD1vsHis.dat")
+L272D_MD_results_3 <- read.table(file="Results2/MD_T124L/AspOD2vsHis.dat")
+L272D_MD_results_4 <- read.table(file="Results2/MD_T124L/Ser133vsHis.dat")
+L272D_MD_results_5 <- read.table(file="Results2/MD_T124L/GluOE1vsHis.dat")
+L272D_MD_results_6 <- read.table(file="Results2/MD_T124L/GluOE2vsHis.dat")
+L272D_MD_results <- L272D_MD_results_1[,2]
+L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_2[,2]);L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_3[,2])
+L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_4[,2]);L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_5[,2])
+L272D_MD_results <- cbind(L272D_MD_results,L272D_MD_results_6[,2])
+names(L272D_MD_results) <-c("step","ServsHis_dist","AspOD1vsHis_dist","AspOD2vsHis_dist","Ser133vsHis_dist","Asp124OD1vsHis_dist","Asp124OD2vsHis_dist")
+
+plot(density(WT_MD_results[,2]))
+plot(density(L272D_MD_results_3[,2]),col=3)
+lines(density(L272D_MD_results_5[,2]),col=2)
+
+summary(L272D_MD_results)
+
+plot(density(WT_MD_results[,4]))
+lines(density(L272D_MD_results_5[,2]),col=2)
+lines(density(L272D_MD_results_6[,2]),col=3)
+lines(density(L272D_MD_results_7[,2]),col=4)
+lines(density(L272D_MD_results_8[,2]),col=5)
+
+# Density plots with the ggplot package
+ggplot()+geom_density(data=L272D_MD_results,aes(ServsHis_dist,fill="ServsHis"),
+                      bw=0.1,alpha=0.5)+
+  geom_density(data=L272D_MD_results,aes(AspOD2vsHis_dist,fill="AspvsHis"),
+               bw=0.1,alpha=0.5)+theme_minimal()+
+  guides(fill=guide_legend(title="Metric"))+
+  scale_fill_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))+
+  scale_color_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))
+
+
+df <- as.data.frame(L272D_MD_results_4)
+data <- stack(df)
+names(data) <- c("values","Metric")
+
+ggplot(data,aes(x=values))+geom_density(aes(group=Metric,colour=Metric,fill=Metric),
+                      bw=0.1,alpha=0.5)
