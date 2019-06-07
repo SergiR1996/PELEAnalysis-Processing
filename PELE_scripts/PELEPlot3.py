@@ -167,8 +167,8 @@ def addUnits(metric_name):
         label = metric_name + " ($\AA$)"
     elif "rmsd" in metric_name.lower():
         label = metric_name + " ($\AA$)"
-    elif "sasa" in metric_name.lower():
-	label = metric_name + " ($\AA^2$)"
+    # elif "sasa" in metric_name.lower():
+#	label = metric_name + " ($\AA^2$)"
     else:
         label = metric_name
     return label
