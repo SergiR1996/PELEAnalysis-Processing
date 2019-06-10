@@ -59,10 +59,10 @@ ggcorrplot(corr,   ggtheme = ggplot2::theme_gray,
 
 # WT data frame
 
-WT_MD_results_1 <- read.table(file="Results/MD_WT/ServsHis.dat")
-WT_MD_results_2 <- read.table(file="Results/MD_WT/AspOD1vsHis.dat")
-WT_MD_results_3 <- read.table(file="Results/MD_WT/AspOD2vsHis.dat")
-WT_MD_results_4 <- read.table(file="Results/MD_WT/localrmsd.xvg")
+WT_MD_results_1 <- read.table(file="Results/MD_WT/ServsHis_tot.dat")
+WT_MD_results_2 <- read.table(file="Results/MD_WT/AspOD1vsHis_tot.dat")
+WT_MD_results_3 <- read.table(file="Results/MD_WT/AspOD2vsHis_tot.dat")
+WT_MD_results_4 <- read.table(file="Results/MD_WT/localrmsd_tot.xvg")
 WT_MD_results <- WT_MD_results_1
 WT_MD_results <- cbind(WT_MD_results,WT_MD_results_2[,2])
 WT_MD_results <- cbind(WT_MD_results,WT_MD_results_3[,2])
@@ -165,6 +165,17 @@ lines(density(L272D_MD_results_5[,2]),col=2)
 lines(density(L272D_MD_results_6[,2]),col=3)
 lines(density(L272D_MD_results_7[,2]),col=4)
 lines(density(L272D_MD_results_8[,2]),col=5)
+
+# T124L total
+
+T124LT_MD_results_1 <- read.table(file="Results2/MD_T124L/ServsHis_tot.dat")
+T124LT_MD_results_2 <- read.table(file="Results2/MD_T124L/AspOD1vsHis_tot.dat")
+T124LT_MD_results_3 <- read.table(file="Results2/MD_T124L/AspOD2vsHis_tot.dat")
+T124LT_MD_results_4 <- read.table(file="Results2/MD_T124L/Ser133vsHis_tot.dat")
+T124LT_MD_results_5 <- read.table(file="Results2/MD_T124L/GluOE1vsHis_tot.dat")
+T124LT_MD_results_6 <- read.table(file="Results2/MD_T124L/GluOE2vsHis_tot.dat")
+T124LT_MD_results_7 <- read.table(file="Results2/MD_T124L/localrmsd_tot.xvg")
+T124LT_MD_results_8 <- read.table(file="Results2/MD_T124L/localrmsd_potential_tot.xvg")
 
 # Density plots with the ggplot package
 ggplot()+geom_density(data=L272D_MD_results,aes(ServsHis_dist,fill="ServsHis"),
@@ -280,7 +291,7 @@ ggplot()+
                bw=0.1,alpha=0.5)+
   geom_density(data=DE_MD_results_8,aes(DE_MD_results_8[,2],fill="T124DD129HQ137E"),
                bw=0.1,alpha=0.5)+
-  geom_density(data=T124L_MD_results_5,aes(T124L_MD_results_5[,2],fill="T124LD129HQ137E"),
+  geom_density(data=T124LT_MD_results_5,aes(T124LT_MD_results_5[,2],fill="T124LD129HQ137E"),
                bw=0.1,alpha=0.5)+
   theme_minimal()+ggtitle("His-Acid distance for the potential catalytic triad")+xlab("His-Acid distance (Ang)")+
   guides(fill=guide_legend(title="Variant"))+
@@ -289,7 +300,7 @@ ggplot()+
 
 summary(WT_MD_results)
 summary(T124D_MD_results_6)
-summary(T124L_MD_results)
+summary(T124LT_MD_results_8);sd(T124LT_MD_results_8[,2])
 summary(Q137E_MD_results)
 summary(DE_MD_results_8)
 
@@ -297,8 +308,8 @@ summary(DE_MD_results_8)
 #------------------------------------------------------  
   
 Complex_MD_results_1 <- read.table(file="Results2/MD_Complex/ServsHis.dat")
-Complex_MD_results_2 <- read.table(file="Results2/MD_Complex/AspOD1vsHis.dat")
-Complex_MD_results_3 <- read.table(file="Results2/MD_Complex/AspOD2vsHis.dat")
+Complex_MD_results_2 <- read.table(file="Results2/MD_Complex/GluOE1vsHis.dat")
+Complex_MD_results_3 <- read.table(file="Results2/MD_Complex/GluOE2vsHis.dat")
 Complex_MD_results_4 <- read.table(file="Results2/MD_Complex/ServsC1.dat")
 Complex_MD_results_5 <- read.table(file="Results2/MD_Complex/ServsC8.dat")
 Complex_MD_results_6 <- read.table(file="Results2/MD_Complex/ServsC11.dat")
@@ -315,6 +326,27 @@ Complex_MD_results <- cbind(Complex_MD_results,Complex_MD_results_9[,2])
 
 Complex_MD_results$min <- do.call(pmin, Complex_MD_results[,2:7])
 
+# Total
+
+ComplexT_MD_results_1 <- read.table(file="Results2/MD_Complex/ServsHis_tot.dat")
+ComplexT_MD_results_2 <- read.table(file="Results2/MD_Complex/GluOE1vsHis_tot.dat")
+ComplexT_MD_results_3 <- read.table(file="Results2/MD_Complex/GluOE2vsHis_tot.dat")
+ComplexT_MD_results_4 <- read.table(file="Results2/MD_Complex/ServsC1_tot.dat")
+ComplexT_MD_results_5 <- read.table(file="Results2/MD_Complex/ServsC8_tot.dat")
+ComplexT_MD_results_6 <- read.table(file="Results2/MD_Complex/ServsC11_tot.dat")
+ComplexT_MD_results_7 <- read.table(file="Results2/MD_Complex/ServsC23_tot.dat")
+ComplexT_MD_results_8 <- read.table(file="Results2/MD_Complex/ServsC30_tot.dat")
+ComplexT_MD_results_9 <- read.table(file="Results2/MD_Complex/ServsC33_tot.dat")
+ComplexT_MD_results_10 <- read.table(file="Results2/MD_Complex/localrmsd_tot.xvg")
+ComplexT_MD_results_11 <- read.table(file="Results2/MD_Complex/localrmsd_potential_tot.xvg")
+
+ComplexT_MD_results <- ComplexT_MD_results_4
+ComplexT_MD_results <- cbind(ComplexT_MD_results,ComplexT_MD_results_5[,2]);ComplexT_MD_results <- cbind(ComplexT_MD_results,ComplexT_MD_results_6[,2])
+ComplexT_MD_results <- cbind(ComplexT_MD_results,ComplexT_MD_results_7[,2]);ComplexT_MD_results <- cbind(ComplexT_MD_results,ComplexT_MD_results_8[,2])
+ComplexT_MD_results <- cbind(ComplexT_MD_results,ComplexT_MD_results_9[,2])
+
+ComplexT_MD_results$min <- do.call(pmin, ComplexT_MD_results[,2:7])
+
 ggplot()+geom_density(data=Complex_MD_results,aes(min),
                       bw=0.1,alpha=0.5,fill="#56B2E9")+
   theme_minimal()+ggtitle("Ser-Substrate for the potential catalytic triad")+xlab("Ser-Substrate distance (Ang)")+
@@ -323,9 +355,9 @@ ggplot()+geom_density(data=Complex_MD_results,aes(min),
 # Catalytic distances in complex
 
 ggplot()+
-  geom_density(data=Complex_MD_results_1,aes(Complex_MD_results_1[,2],fill="D238SW269D_with_ligand"),
+  geom_density(data=Complex_MD_results_1,aes(Complex_MD_results_1[,2],fill="T124LD129HQ137E_with_ligand"),
                bw=0.1,alpha=0.5)+
-  geom_density(data=W269D_MD_results_4,aes(W269D_MD_results_4[,2],fill="D238SW269D"),
+  geom_density(data=T124L_MD_results_4,aes(T124L_MD_results_4[,2],fill="T124LD129HQ137E"),
                bw=0.1,alpha=0.5)+
   theme_minimal()+ggtitle("Ser-His distance for the potential catalytic triad")+xlab("Ser-His distance (Ang)")+
   guides(fill=guide_legend(title="MD simulation"))+
@@ -333,9 +365,9 @@ ggplot()+
   scale_color_manual(values=c("#56B2E9", "#D69F00", "#7e082a","#ffdab9","#a3ff00","#082D8E","#ff001a"))
 
 ggplot()+
-  geom_density(data=Complex_MD_results_2,aes(Complex_MD_results_2[,2],fill="D238SW269D_with_ligand"),
+  geom_density(data=Complex_MD_results_2,aes(Complex_MD_results_2[,2],fill="T124LD129HQ137E_with_ligand"),
                bw=0.1,alpha=0.5)+
-  geom_density(data=W269D_MD_results_5,aes(W269D_MD_results_5[,2],fill="D238SW269D"),
+  geom_density(data=T124L_MD_results_5,aes(T124L_MD_results_5[,2],fill="T124LD129HQ137E"),
                bw=0.1,alpha=0.5)+
   theme_minimal()+ggtitle("His-Asp distance for the potential catalytic triad")+xlab("His-Asp distance (Ang)")+
   guides(fill=guide_legend(title="MD simulation"))+

@@ -1,56 +1,48 @@
 # Set the current working directory
-getwd();setwd("/home/sergiroda/Documents/Simulations/PETase_Manuel/Multiple_active_sites")
+getwd();setwd("/home/sergi/Documents/MSc_in_Bioinformatics_UAB/Module/Module_6&7/Results/PELE/2HEMHET/WT")
+# install.packages("ggExtra") # For density plots added in the plot
+library(ggpubr);library(ggcorrplot);library("ggExtra")
 
 # Generate the table of the PELE results. Transform the PELE results with the sed tool
 # (sed -i 's/    / /g' *.out) to enable its recognition.
-Total <- read.table("out/report_1.out",header=FALSE,sep=" ")
-Total[,26] <- 1
-Total <- Total[5:nrow(Total),]
+Total <- read.table("report_1.out",header=FALSE,sep=" ")
+Total[,length(Total)] <- 1
+Total <- Total[5:nrow(Total),2:length(Total)]
 for (i in 2:128) {
-  table <- read.table(sprintf("out/report_%s.out",i),header = FALSE,sep=" ")
-  table[,26] <- i
-  Total <- rbind(Total,table[5:nrow(table),]) # Append the table of one report with 
+  table <- read.table(sprintf("report_%s.out",i),header = FALSE,sep=" ")
+  table[,length(table)] <- i
+  Total <- rbind(Total,table[5:nrow(table),2:length(table)]) # Append the table of one report with 
   # the 4 first elements of the PELE simulation eliminated.
 }
 
-# Density plot of the different active sites
-install.packages("sm");library(sm)
+# Density plot using kernel trick for PELE metrics
 
-# First active site
-xlim <- range(Total[,5:10])
-D1 <- density(Total[,5],from = xlim[1], to = xlim[2]);D2 <- density(Total[,6],from = xlim[1], to = xlim[2])
-D3 <- density(Total[,7],from = xlim[1], to = xlim[2]);D4 <- density(Total[,8],from = xlim[1], to = xlim[2])
-D5 <- density(Total[,9],from = xlim[1], to = xlim[2]);D6 <- density(Total[,10],from = xlim[1], to = xlim[2])
+ggplot()+geom_density(data=Total,aes(Total[,8]),
+                      bw=0.1,alpha=0.5,fill="#56B2E9")+
+  theme_minimal()+ggtitle("Title")+xlab("X label")+
+  theme(plot.title = element_text(hjust = 0.5))
 
-ylim <- range(D1$y, D2$y, D3$y, D4$y, D5$y, D6$y)
-plot(D1, col = 1, lwd = 2, type = "l",xlim = xlim, ylim = ylim)
-lines(D2, col = 2, lwd = 2);lines(D3, col = 3, lwd = 2)
-lines(D4, col = 4, lwd = 2);lines(D5, col = 5, lwd = 2);lines(D6, col = 6, lwd = 2)
+# Correlation matrix plotted between different PELE metrics
 
-# Second active site
-xlim <- range(Total[,11:16])
-D1 <- density(Total[,11],from = xlim[1], to = xlim[2]);D2 <- density(Total[,12],from = xlim[1], to = xlim[2])
-D3 <- density(Total[,13],from = xlim[1], to = xlim[2]);D4 <- density(Total[,14],from = xlim[1], to = xlim[2])
-D5 <- density(Total[,15],from = xlim[1], to = xlim[2]);D6 <- density(Total[,16],from = xlim[1], to = xlim[2])
+corr <- round(cor(Total[,5:10]),3)
+p.mat <- cor_pmat(Total[,5:10])
+ggcorrplot(corr,   ggtheme = ggplot2::theme_gray,
+           colors = c("#F8A31B", "white", "#8DD3C7"),lab=TRUE,p.mat = p.mat,title = "Correlation matrix of the PELE quantitative metrics")+
+  theme(plot.title = element_text(hjust = 0.5))
 
-ylim <- range(D1$y, D2$y, D3$y, D4$y, D5$y, D6$y)
-plot(D1, col = 1, lwd = 2, type = "l",xlim = xlim, ylim = ylim)
-lines(D2, col = 2, lwd = 2);lines(D3, col = 3, lwd = 2)
-lines(D4, col = 4, lwd = 2);lines(D5, col = 5, lwd = 2);lines(D6, col = 6, lwd = 2)
 
-# Third active site
-xlim <- range(Total[,17:22])
-D1 <- density(Total[,17],from = xlim[1], to = xlim[2]);D2 <- density(Total[,18],from = xlim[1], to = xlim[2])
-D3 <- density(Total[,19],from = xlim[1], to = xlim[2]);D4 <- density(Total[,20],from = xlim[1], to = xlim[2])
-D5 <- density(Total[,21],from = xlim[1], to = xlim[2]);D6 <- density(Total[,22],from = xlim[1], to = xlim[2])
+# Scatter plot of two metrics with density plots represented in the sides
 
-ylim <- range(D1$y, D2$y, D3$y, D4$y, D5$y, D6$y)
-plot(D1, col = 1, lwd = 2, type = "l",xlim = xlim, ylim = ylim)
-lines(D2, col = 2, lwd = 2);lines(D3, col = 3, lwd = 2)
-lines(D4, col = 4, lwd = 2);lines(D5, col = 5, lwd = 2);lines(D6, col = 6, lwd = 2)
+p <- ggplot(Total,aes(Total[,5],Total[,6]))+geom_point(color="white",size=1,alpha=0.5)+
+  stat_density_2d(aes(col = ..level..))+
+  theme(panel.background = element_blank(), 
+      panel.grid = element_blank(),
+      panel.border = element_rect(fill = NA),
+      legend.position="none")
 
-summary(Total[,11:16])
-summary(Total[,17:22])
+ggMarginal(p,type = "density",color="darkblue",fill="blue",alpha=0.6)
 
-Total[which.min(Total$V22),]
-Total[which.min(Total$V13),]
+# As the previous one but used mainly for different subsets in the data.
+
+ggscatterhist(
+  table, x = "V8", y = "V9", size = 0.1, alpha = 0.6)

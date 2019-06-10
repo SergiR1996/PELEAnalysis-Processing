@@ -64,10 +64,10 @@ ggcorrplot(corr,   ggtheme = ggplot2::theme_gray,
 # WT data frame
 setwd("/home/sergiroda/repos/PELEAnalysis-Processing/PELE_mean_analysis")
 
-WT_MD_results_1 <- read.table(file="Results/MD_WT/ServsHis.dat")
-WT_MD_results_2 <- read.table(file="Results/MD_WT/AspOD1vsHis.dat")
-WT_MD_results_3 <- read.table(file="Results/MD_WT/AspOD2vsHis.dat")
-WT_MD_results_4 <- read.table(file="Results/MD_WT/localrmsd.xvg")
+WT_MD_results_1 <- read.table(file="Results/MD_WT/ServsHis_tot.dat")
+WT_MD_results_2 <- read.table(file="Results/MD_WT/AspOD1vsHis_tot.dat")
+WT_MD_results_3 <- read.table(file="Results/MD_WT/AspOD2vsHis_tot.dat")
+WT_MD_results_4 <- read.table(file="Results/MD_WT/localrmsd_tot.xvg")
 WT_MD_results <- WT_MD_results_1
 WT_MD_results <- cbind(WT_MD_results,WT_MD_results_2[,2])
 WT_MD_results <- cbind(WT_MD_results,WT_MD_results_3[,2])
@@ -142,6 +142,18 @@ ggplot()+geom_density(data=W269D_MD_results,aes(AspOD2vsHis_dist,fill="AspvsHis"
   scale_fill_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))+
   scale_color_manual(values=c("#56B2E9", "#D69F00", "#56B2E9"))
 
+# W269D total
+
+W269DT_MD_results_1 <- read.table(file="Results/MD_W269D/ServsHis_tot.dat")
+W269DT_MD_results_2 <- read.table(file="Results/MD_W269D/AspOD1vsHis_tot.dat")
+W269DT_MD_results_3 <- read.table(file="Results/MD_W269D/AspOD2vsHis_tot.dat")
+W269DT_MD_results_4 <- read.table(file="Results/MD_W269D/Ser238vsHis_tot.dat")
+W269DT_MD_results_5 <- read.table(file="Results/MD_W269D/Asp269OD1vsHis_tot.dat")
+W269DT_MD_results_6 <- read.table(file="Results/MD_W269D/Asp269OD2vsHis_tot.dat")
+W269DT_MD_results_7 <- read.table(file="Results/MD_W269D/localrmsd_tot.xvg")
+W269DT_MD_results_8 <- read.table(file="Results/MD_W269D/localrmsd_potential_tot.xvg")
+
+summary(W269D_MD_results_1);summary(W269DT_MD_results_1)
 # S278K data frame
 
 S278K_MD_results_1 <- read.table(file="Results/MD_S278K/ServsHis.dat")
@@ -269,6 +281,29 @@ Complex_MD_results <- cbind(Complex_MD_results,Complex_MD_results_9[,2])
 
 Complex_MD_results$min <- do.call(pmin, Complex_MD_results[,2:7])
 
+summary(Complex_MD_results$min);sd(Complex_MD_results$min)
+
+# Total
+
+ComplexT_MD_results_1 <- read.table(file="Results/MD_Complex/ServsHis_tot.dat")
+ComplexT_MD_results_2 <- read.table(file="Results/MD_Complex/AspOD1vsHis_tot.dat")
+ComplexT_MD_results_3 <- read.table(file="Results/MD_Complex/AspOD2vsHis_tot.dat")
+ComplexT_MD_results_4 <- read.table(file="Results/MD_Complex/ServsC1_tot.dat")
+ComplexT_MD_results_5 <- read.table(file="Results/MD_Complex/ServsC8_tot.dat")
+ComplexT_MD_results_6 <- read.table(file="Results/MD_Complex/ServsC11_tot.dat")
+ComplexT_MD_results_7 <- read.table(file="Results/MD_Complex/ServsC23_tot.dat")
+ComplexT_MD_results_8 <- read.table(file="Results/MD_Complex/ServsC30_tot.dat")
+ComplexT_MD_results_9 <- read.table(file="Results/MD_Complex/ServsC33_tot.dat")
+ComplexT_MD_results_10 <- read.table(file="Results/MD_Complex/localrmsd_tot.xvg")
+ComplexT_MD_results_11 <- read.table(file="Results/MD_Complex/localrmsd_potential_tot.xvg")
+
+ComplexT_MD_results <- ComplexT_MD_results_4
+ComplexT_MD_results <- cbind(ComplexT_MD_results,ComplexT_MD_results_5[,2]);ComplexT_MD_results <- cbind(ComplexT_MD_results,ComplexT_MD_results_6[,2])
+ComplexT_MD_results <- cbind(ComplexT_MD_results,ComplexT_MD_results_7[,2]);ComplexT_MD_results <- cbind(ComplexT_MD_results,ComplexT_MD_results_8[,2])
+ComplexT_MD_results <- cbind(ComplexT_MD_results,ComplexT_MD_results_9[,2])
+
+ComplexT_MD_results$min <- do.call(pmin, ComplexT_MD_results[,2:7])
+
 ggplot()+geom_density(data=Complex_MD_results,aes(min),
                       bw=0.1,alpha=0.5,fill="#56B2E9")+
   theme_minimal()+ggtitle("Ser-Substrate for the potential catalytic triad")+xlab("Ser-Substrate distance (Ang)")+
@@ -298,7 +333,7 @@ ggplot()+
 
 # RMSD in complex
 
-ggplot()+geom_density(data=Complex_MD_results_11,aes(Complex_MD_results_11[,2]),
+ggplot()+geom_density(data=ComplexT_MD_results_11,aes(ComplexT_MD_results_11[,2]),
                       bw=0.01,alpha=0.5,fill="#56B2E9")+
   theme_minimal()+ggtitle("Local RMSD for the potential catalytic triad")+xlab("Local RMSD (nm)")+
   theme(plot.title = element_text(hjust = 0.5))
@@ -473,3 +508,7 @@ summary(S278R_MD_results)
 summary(W269D_MD_results)
 summary(A240L_MD_results)
 
+p <- ggplot(W269D_MD_results,aes(W269D_MD_results[,5],W269D_MD_results[,6]))+geom_point(color="black",size=1,alpha=0.5)+
+  geom_density_2d(color="blue")+theme_minimal()
+
+ggMarginal(p,type = "density",color="blue",fill="blue",alpha=0.5)
