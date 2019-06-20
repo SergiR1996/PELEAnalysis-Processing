@@ -226,8 +226,11 @@ summary(W269D_MD_results_1);summary(W269DT_MD_results_1)
 
 # Global RMSD
 
-ggplot(data=W269D_MD_results_9,aes(x=W269D_MD_results_9[,1],y=W269D_MD_results_9[,2],
-                                color="D238SW269D"))+geom_line(alpha=0.7)+
+ggplot(data=WT_MD_results_8,aes(x=WT_MD_results_8[,1],y=WT_MD_results_8[,2],
+                                color="WT"))+geom_line(alpha=0.7)+
+  geom_line(data=W269D_MD_results_9,
+            aes(x=W269D_MD_results_9[,1],
+                y=W269D_MD_results_9[,2],color="D238SW269D"),alpha=0.7)+
   geom_line(data=W269DT_MD_results_9,
             aes(x=W269DT_MD_results_9[,1],
                 y=W269DT_MD_results_9[,2],color="D238SW269D: Average"),alpha=0.7)+
@@ -339,7 +342,7 @@ ASP <- ggplot()+
                bw=0.1,alpha=0.5)+
   geom_density(data=T124LT_MD_results_5,aes(T124LT_MD_results_5[,2],fill="D129HT124LQ137E: Average"),
                bw=0.1,alpha=0.5)+
-  theme_minimal()+ggtitle("Asp-His")+xlab("Asp-His distance (Å)")+
+  theme_minimal()+ggtitle("Acid-His")+xlab("Acid-His distance (Å)")+
   guides(fill=guide_legend(title="Variant"))+
   theme(axis.text = element_text(size =11),
         axis.title = element_text(size =13),

@@ -346,7 +346,7 @@ ggplot()+
                bw=0.1,alpha=0.5)+
   geom_density(data=T124L_MD_results_3,aes(T124L_MD_results_3[,2],fill="D129HT124LQ137E"),
                bw=0.1,alpha=0.5)+
-  theme_minimal()+ggtitle("Asp-His distance for the main catalytic triad")+xlab("Asp-His distance (Å)")+
+  theme_minimal()+ggtitle("Acid-His distance for the main catalytic triad")+xlab("Acid-His distance (Å)")+
   guides(fill=guide_legend(title="Variant"))+
   theme(axis.text = element_text(size =11),
         axis.title = element_text(size =13),
