@@ -60,7 +60,8 @@ def parseArgs():
                   output directory where the csv file will be saved
     """
 
-    parser = ap.ArgumentParser()
+    parser = ap.ArgumentParser(description='Script that returns a csv file with the mean of the numerical \
+        metrics of the reports file from a PELE simulation')
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
     required.add_argument("-i", "--input", required=True, metavar="FILE",
@@ -84,14 +85,16 @@ def Storeresults(reports):
     Results: dictionary of lists
              dictionary containing the mean of the different quantitative parameters
     """
+
     Results = {}
+
     for report in reports:
         reportID = int(os.path.basename(report).split('_')[-1].split('.')[0])
         with open(report,'r') as report_file:
             if '0' not in Results:
                 line = report_file.readline()
-                Results[0] = line.split("    ")[3:(len(line.split())-1)]
-                Means = [[] for x in range(3,(len(line.split())-1))]
+                Results[0] = line.split("    ")[3:(len(line.split()))]
+                Means = [[] for x in range(3,(len(line.split())))]
             else:
                 next(report_file)
             for i, line in enumerate(report_file):
@@ -99,6 +102,7 @@ def Storeresults(reports):
                     if i>=3:
                         Means[i-3].append(float(element))
             Results[reportID]=[str(n.mean(Means[i])) for i in range(len(Means))]
+
     return Results
 
 def Outputresults(Results,output_path):
@@ -111,8 +115,10 @@ def Outputresults(Results,output_path):
     """
     Output_file = open(output_path,"wt")
     Sorted_results = sorted(list(Results.items()))
+
     for i in range(len(Sorted_results)):
         Output_file.write(str(Sorted_results[i][0])+','+",".join(Sorted_results[i][1])+"\n")
+
     Output_file.close()
 
                 

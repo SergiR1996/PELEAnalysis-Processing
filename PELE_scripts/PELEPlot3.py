@@ -55,7 +55,7 @@ def parseReports(reports_to_parse, parser):
             reports.append(report)
 
     if len(reports) == 0:
-        print "Error: list of report files is empty."
+        print ("Error: list of report files is empty.")
         parser.print_help()
         exit(1)
 
@@ -87,7 +87,8 @@ def parseArgs():
 		  key representing the font style in the font dictionary
     """
 
-    parser = ap.ArgumentParser()
+    parser = ap.ArgumentParser(description='Script used to generate plots from the metrics \
+        of the reports files from a PELE simulation')
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
     required.add_argument("-i", "--input", required=True, metavar="FILE",
@@ -167,8 +168,6 @@ def addUnits(metric_name):
         label = metric_name + " ($\AA$)"
     elif "rmsd" in metric_name.lower():
         label = metric_name + " ($\AA$)"
-    # elif "sasa" in metric_name.lower():
-#	label = metric_name + " ($\AA^2$)"
     else:
         label = metric_name
     return label

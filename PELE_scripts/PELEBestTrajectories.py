@@ -65,7 +65,8 @@ def parseArgs():
                   output directory where the resulting best trajectories will be saved
     """
 
-    parser = ap.ArgumentParser()
+    parser = ap.ArgumentParser(description='Script used to find the most interesting trajectories \
+        acoording to a numerical metric against the binding energy or SASA of report files from a PELE simulation')
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
     required.add_argument("-i", "--input", required=True, metavar="FILE",
@@ -101,10 +102,9 @@ def Storebesttrajectories(reports,metric,energy=-50.0,sasa=0.3):
     Below60 : Dictionary of lists
 		  The best trajectories to the smallest cutoff.
     """
-    Below50={}
-    Below55={}
-    Below60={}
-    Sasa03={}
+
+    Below50,Below55,Below60,Sasa03={},{},{},{}
+
     for report in reports:
         reportID=str(os.path.basename(report).split('_')[-1].split('.')[0])
         with open(report, 'r') as report_file:
@@ -150,8 +150,10 @@ def Reportbesttrajectories(Below50,Below55,Below60,Sasa03,energy=-50.0,sasa=0.3,
     output_path : Output file
 		  The report output file with the best trajectories.
     """
+
     Report=open(output_path,"wt")
     Report.write("--- Below %s kcal/mol ---\n" %energy)
+
     for key,values in Below50.items():
         Report.write("%s Ang: " %key + ", ".join(values)+"\n")
     Report.write("--- Below %s kcal/mol ---\n" %(energy-5.0))
@@ -163,6 +165,7 @@ def Reportbesttrajectories(Below50,Below55,Below60,Sasa03,energy=-50.0,sasa=0.3,
     Report.write("--- SASA below %s ---\n" %sasa)
     for key,values in Sasa03.items():
         Report.write("%s Ang: " %key + ", ".join(values)+"\n")
+        
     Report.close()
 
 

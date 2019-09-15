@@ -3,6 +3,7 @@
 
 # Imports
 import os,sys,re
+import subprocess
 import glob
 import numpy as n
 
@@ -12,140 +13,134 @@ __version__ ="1.0"
 __maintainer__="Sergi Rodà Llordés"
 __email__="sergi.rodallordes@bsc.es"
 
+class pKa:
 
-def computepKa(PDB):
-    """Take the PDB file and calculate the pKa of titrable residues using propka
+    def __init__(self,PDB,Ser_residue):
+        self.__PDB = PDB
+        self.__Ser_residue = Ser_residue
+        self.__Results = {}
+        self.__pI_folded = 0
+        self.__pI_unfolded = 0
+        self.__pI_active_site = 0
 
-    PARAMETERS
-    ----------
-    PDB : string
-                       PDB file that wants to be added to the analysis
+    @property
+    def PDB(self):
 
-    RETURNS
-    -------
-    Results : dict of titrable residues with the calculated pKa
+        return self.__PDB
 
-    pI_folded: The isoelectric point of the protein in the folded state
+    @property
+    def Ser_residue(self):
 
-    pI_unfolded: The isoelectric point of the protein in the unfolded state
-    """
+        return self.__Ser_residue
 
-    Results,index_pKa1,index_pKa2,pI_folded,pI_unfolded = {},0,0,0,0
-    os.system("propka31 %s"%PDB)
-    pKa_file = open("%s.pka -q"%PDB[:-4])
+    @property
+    def pI(self):
 
-    for line in pKa_file:
-        if "SUMMARY OF THIS PREDICTION" in line:
-            index_pKa1=1
-            continue
-        if index_pKa1!=0:
-            index_pKa2=index_pKa1
-            index_pKa1=0
-            continue
-        if index_pKa2!=0:
-            Results[line[3:6]+"_"+line[7:10]] = [int(line[7:10]),float(line[16:21])]
-        if "N+" in line and index_pKa2!=0:
-            Results[line[3:6]+"_"+line[7:10]] = [int(line[7:10]), float(line[16:21])]
-            index_pKa2=0
-        if "The pI is " in line:
-            pI_folded, pI_unfolded = float(line[11:15]), float(line[30:34])
+        return self.__pI_folded,self.__pI_unfolded,self.__pI_active_site
 
-    return Results,pI_folded,pI_unfolded
+    def propka(self):
+        """Take the PDB file and calculate the pKa of titrable residues using propka
 
+        PARAMETERS
+        ----------
+        PDB : string
+                PDB file that wants to be added to the analysis
 
-def Neighbouratoms(PDB,Ser_residue,Results):
-    """Take the atoms near the active site to store the pKa values
+        OUTPUT
+        ------
+        Results : dict of titrable residues with the calculated pKa
 
-    PARAMETERS
-    ----------
-    PDB : string
-                       PDB file that wants to be added to the analysis
+        pI_folded: The isoelectric point of the protein in the folded state
 
-    Ser_residue : int
-                       Index or number referring to the catalytic Ser residue
+        pI_unfolded: The isoelectric point of the protein in the unfolded state
+        """
 
-    Results : dict
-                       dict of titrable residues with the calculated pKa
+        index_pKa1,index_pKa2 = 0,0
 
-    RETURNS
-    -------
-    Aux_results : dict of titrable residues with the calculated pKa in the active site
-    """
+        try:
+            subprocess.call("propka31" +"%s" % self.__PDB + "-q")
+            print("Computing pI values...")
 
-    Aux_results = {}
+        except:
+            answer = input("propka is not installed. Do you want to install it? [Y/N]")
+            if answer.lower() == "y" or answer.lower() == "yes":
+                #subprocess.call(["git","clone","https://github.com/jensengroup/propka-3.1"])
+                os.system("cd propka-3.1");os.system("python setup.py install --user")
+                subprocess.call("propka31" +"%s" % self.__PDB + "-q")
+            elif answer.lower() == "n" or answer.lower() == "No":
+                exit()
+            else:
+                pass
 
-    # Get the coordinates of the Ser residue to look for the neighbour titrable residues
-    PDB_file = open(PDB, "rt")
-    for line in PDB_file:
-        if line[17:20]=="SER" and int(Ser_residue)==int(line[23:26]) and "OG" in line:
-            x,y,z = float(line[30:38]),float(line[38:46]),float(line[46:54])
-
-    # Get the neighbour residues and store them with the pKa value
-    PDB_file = open(PDB, "rt")
-    for line in PDB_file:
-        if "TER" in line:
-            pass
         else:
-            x_aux, y_aux, z_aux = float(line[30:38]), float(line[38:46]), float(line[46:54])
-            if n.sqrt((x-x_aux)**2+(y-y_aux)**2+(z-z_aux)**2)<=float(10):
-                print(line[17:20]+"_"+line[23:26])
-                if line[17:20]+"_"+line[23:26] in Results:
-                    Aux_results[line[17:20]+"_"+line[23:26]] = Results[line[17:20]+"_"+line[23:26]]
+            os.system("rm *.propka_input")
+            pKa_file = open("%s.pka"%self.__PDB[self.__PDB.rindex("/")+1:-4])
+            for line in pKa_file:
+                if "SUMMARY OF THIS PREDICTION" in line:
+                    index_pKa1=1
+                    continue
+                if index_pKa1!=0:
+                    index_pKa2=index_pKa1
+                    index_pKa1=0
+                    continue
+                if index_pKa2!=0:
+                    self.__Results[line[3:6]+"_"+line[7:10]] = [int(line[7:10]),float(line[16:21])]
+                if "N+" in line and index_pKa2!=0:
+                    self.__Results[line[3:6]+"_"+line[7:10]] = [int(line[7:10]), float(line[16:21])]
+                    index_pKa2=0
+                if "The pI is " in line:
+                    self.__pI_folded, self.__pI_unfolded = float(line[10:15]), float(line[29:34])
+            os.system("rm *.pka")
 
-    return Aux_results
+    def Neighbouratoms(self):
+        """Take the atoms near the active site to compute the pI around this area
 
-def returnvalues(pI_folded,pI_unfolded,pKa_results):
-    """
-    Take the calculated values in the previous functions and return the pI values
+        PARAMETERS
+        ----------
+        PDB : string
+                           PDB file that wants to be added to the analysis
 
-    PARAMETERS
-    ----------
-    pI_folded : float
-                       Calculated pI value in the folded state
+        Ser_residue : int
+                           Index or number referring to the catalytic Ser residue
 
-    pI_unfolded : float
-                       Calculated pI value in the unfolded state
+        Results : dict
+                           dict of titrable residues with the calculated pKa
 
-    pKa_results : dict
-                       Dict of all pKa values from the titrable residues around the active site
+        OUTPUT
+        ------
+        pI_active_site : pI of the active site and surroundings (10 Å)
+        """
 
-    RETURNS
-    -------
-    pI_folded : float
-                       Calculated pI value in the folded state
+        Aux_results,values = {},[]
 
-    pI_unfolded : float
-                       Calculated pI value in the unfolded state
+        # Get the coordinates of the Ser residue to look for the neighbour titrable residues
+        PDB_file = open(self.__PDB, "rt")
+        for line in PDB_file:
+            if line[17:20]=="SER" and int(self.__Ser_residue)==int(line[23:26]) and "OG" in line:
+                x,y,z = float(line[30:38]),float(line[38:46]),float(line[46:54])
 
-    pI_active_site : float
-                       Calculated pI value from the active site
+        # Get the neighbour residues and store them with the pKa value
+        PDB_file = open(self.__PDB, "rt")
+        for line in PDB_file:
+            if "TER" in line:
+                pass
+            elif "ATOM" in line:
+                x_aux, y_aux, z_aux = float(line[30:38].strip()), float(line[38:46].strip()), float(line[46:54].strip())
+                if n.sqrt((x-x_aux)**2+(y-y_aux)**2+(z-z_aux)**2)<=float(10):
+                    if line[17:20]+"_"+line[23:26] in self.__Results:
+                        Aux_results[line[17:20]+"_"+line[23:26]] = self.__Results[line[17:20]+"_"+line[23:26]]
+            else:
+                pass
+        self.__Results = Aux_results
+        for value in list(Aux_results.values()):
+            values.append(value[1])
 
-    """
+        self.__pI_active_site = n.mean(values)
 
-    values=[]
-    for value in list(pKa_results.values()):
-        values.append(value[1])
-    pI = n.mean(values)
+    def computepI(self):
+        """It executes the methods of the class sequentially,
+        returning the 3 computed values of pI"""
 
-    return pI,pI_folded,pI_unfolded
-
-
-
-
-def main(PDB,Ser_residue):
-    """Main function
-
-    It is called when this script is the main program called by the interpreter
-    """
-
-    # Compute pKa of titrable residues from the PDB file
-    Results = computepKa(PDB)
-
-    #Store the pKa of the residues around the active site
-    pI=Neighbouratoms(PDB,Ser_residue,Results[0])
-
-    returnvalues(Results[1],Results[2],pI)
-
-if __name__ == "__main__":
-    """Call the main function"""
-    main(PDB,Ser_residue)
+        self.propka()
+        self.Neighbouratoms()
+        self.pI()
