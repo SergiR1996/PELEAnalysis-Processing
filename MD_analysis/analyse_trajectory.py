@@ -120,9 +120,9 @@ class TrajectoryProperties:
 
 
     # @nanometer_to_angstrom
-    def traj_rmsd(self, reference):
+    def traj_rmsd(self, reference, atom_indices):
 
-        return md.rmsd(self.traj, reference)
+        return md.rmsd(self.traj, reference, atom_indices = atom_indices)
 
 
 
@@ -280,7 +280,7 @@ class Plotter:
         sns.boxplot(self.y_axis, orient="v")
         plt.title(self.title);
         plt.xlabel(self.x_label);
-        plt.ylabel(self.y_label)
+        plt.ylabel("Trajectory")
         if self.plot:plt.show()
         if self.save: plt.savefig(os.path.join(self.path, "md_{}_boxplot.png".format(self.figure_name)), dpi=self.dpis)
         plt.clf()
@@ -289,10 +289,10 @@ class Plotter:
 
         sns.distplot(self.y_axis)
         plt.title(self.title);
-        plt.xlabel(self.x_label);
-        plt.ylabel(self.y_label)
+        plt.xlabel(self.y_label);
+        plt.ylabel("Density")
         if self.plot:plt.show()
-        if self.save: plt.savefig(os.path.join(self.path, "md_{}_boxplot.png".format(self.figure_name)), dpi=self.dpis)
+        if self.save: plt.savefig(os.path.join(self.path, "md_{}_densityplot.png".format(self.figure_name)), dpi=self.dpis)
         plt.clf()
 
 
@@ -333,6 +333,7 @@ def parse_args():
     parser.add_argument("top", type=str, help="Topology file (normally in .gro format)")
     parser.add_argument("-I", "--info", help="Save informfation of trajectory in file", action="store_true")
     parser.add_argument("-R","--rmsd",help="Compute the RMSD between one reference and the trajectory",action="store_true")
+    parser.add_argument("-LR","--localrmsd",help="Compute the local RMSD between one reference and the trajectory",type=str,nargs='*')
     parser.add_argument("-D","--distance", type=int, help="Two atoms (number) to compute it distance along the trajectory", nargs=2)
     parser.add_argument("-C", "--contact", type=int, help="Two residues (number of residues) to compute its contacts along the trajectory", nargs=2)
     parser.add_argument("-DIS", "--displacement", type=int, help="Atom pair for computing its displacements along the tractory", nargs=2)
@@ -341,11 +342,11 @@ def parse_args():
     parser.add_argument("-PS","--plot_style", type=str, help="Style of the plots (default=ggplot)", default="ggplot")
     parser.add_argument("-P", "--plot", help="Show plots", action="store_true")
     parser.add_argument("-SP", "--save_plot", help="Save plots in directory", action="store_true")
-    parser.add_argument("-T","--time", help="Conversion factor from frames to time-scale", type=int, default=1)
+    parser.add_argument("-T","--time", help="Conversion factor from frames to time-scale", type=float, default=1)
 
     args = parser.parse_args()
 
-    return args.traj, args.top, args.rmsd , args.distance, args.contact, args.displacement, args.gyration , args.sasa, \
+    return args.traj, args.top, args.rmsd, args.localrmsd, args.distance, args.contact, args.displacement, args.gyration , args.sasa, \
            args.plot_style, args.plot, args.save_plot, args.time
 
 
@@ -358,21 +359,30 @@ def main():
 
 
 
-    traj, top, rmsd, distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time = parse_args()
-    xtc = OpenFiles(traj, top)
-    
+    traj, top, rmsd, local_rmsd, distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time = parse_args()
+
+    xtc = OpenFiles(traj, top)    
     if ".xtc" in traj:
-    	traj = xtc.load_xtc()
+    	trajectory = xtc.load_xtc()
     else:
-    	traj = xtc.load_trajectory()
-    prop = TrajectoryProperties(traj)
-    number_of_frames =  xtc.number_frames(traj)
+    	trajectory = xtc.load_trajectory()
+
+    prop = TrajectoryProperties(trajectory)
+    number_of_frames =  xtc.number_frames(trajectory)
     x_axis  = np.arange(0,number_of_frames,1)*time
 
     if rmsd:
 
-        RMSD = prop.traj_rmsd(traj)
-        pl = Plotter(x_axis, RMSD,x_label = "Time (ps)", y_label = "RMSD (nm)", title = "Global RMSD of the MD simulation",figure_name="RMSD",plot=plot,save=save_plot)
+        RMSD = prop.traj_rmsd(trajectory,trajectory.topology.select("backbone"))
+        pl = Plotter(x_axis, RMSD,x_label = "Time (ns)", y_label = "RMSD (nm)", title = "Global RMSD of the MD simulation",figure_name="RMSD",plot=plot,save=save_plot)
+        pl.scatter_plot()
+        pl.box_plot()
+        pl.density_plot()
+
+    if local_rmsd is not None:
+
+        RMSD = prop.traj_rmsd(trajectory,trajectory.topology.select("resid {}".format(" ".join(local_rmsd))))
+        pl = Plotter(x_axis, RMSD,x_label = "Time (ns)", y_label = "RMSD (nm)", title = "Local RMSD of the MD simulation",figure_name="LocalRMSD",plot=plot,save=save_plot)
         pl.scatter_plot()
         pl.box_plot()
         pl.density_plot()
@@ -380,7 +390,7 @@ def main():
     if distance is not None:
 
         distances = prop.compute_distance([distance])
-        pl = Plotter(x_axis, distances, x_label = "Time (ps)", y_label = "Distance ($\AA$)", title = "Distance of the MD simulation", figure_name="distance", plot=plot, save=save_plot)
+        pl = Plotter(x_axis, distances, x_label = "Time (ns)", y_label = "Distance ($\AA$)", title = "Distance of the MD simulation", figure_name="distance", plot=plot, save=save_plot)
         pl.scatter_plot()
         pl.box_plot()
         pl.density_plot()
