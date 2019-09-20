@@ -290,7 +290,7 @@ class Plotter:
         sns.distplot(self.y_axis)
         plt.title(self.title);
         plt.xlabel(self.y_label);
-        plt.ylabel("Density")
+        plt.ylabel("Density (1/{})".format(self.y_label.split(" ")[1][1:-1]))
         if self.plot:plt.show()
         if self.save: plt.savefig(os.path.join(self.path, "md_{}_densityplot.png".format(self.figure_name)), dpi=self.dpis)
         plt.clf()
@@ -382,7 +382,7 @@ def main():
     if local_rmsd is not None:
 
         RMSD = prop.traj_rmsd(trajectory,trajectory.topology.select("resid {}".format(" ".join(local_rmsd))))
-        pl = Plotter(x_axis, RMSD,x_label = "Time (ns)", y_label = "RMSD (nm)", title = "Local RMSD of the MD simulation",figure_name="LocalRMSD",plot=plot,save=save_plot)
+        pl = Plotter(x_axis, RMSD,x_label = "Time (ns)", y_label = "RMSD (nm)", title = "Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd)),figure_name="LocalRMSD_{}".format("_".join(local_rmsd)),plot=plot,save=save_plot)
         pl.scatter_plot()
         pl.box_plot()
         pl.density_plot()
@@ -390,7 +390,7 @@ def main():
     if distance is not None:
 
         distances = prop.compute_distance([distance])
-        pl = Plotter(x_axis, distances, x_label = "Time (ns)", y_label = "Distance ($\AA$)", title = "Distance of the MD simulation", figure_name="distance", plot=plot, save=save_plot)
+        pl = Plotter(x_axis, distances, x_label = "Time (ns)", y_label = "Distance ($\AA$)", title = "Distance of the MD simulation between atoms {}".format(" and ".join(str(index) for index in distance)), figure_name="distance_{}".format("_".join(str(index) for index in distance)), plot=plot, save=save_plot)
         pl.scatter_plot()
         pl.box_plot()
         pl.density_plot()

@@ -7,6 +7,7 @@ import os
 import glob
 import argparse as ap
 from matplotlib import pyplot
+import seaborn as sns
 from math import isnan
 
 
@@ -114,6 +115,12 @@ def parseArgs():
 			  help = "title of the figure", default="")
     optional.add_argument("-F","--font", metavar="STRING [STRING]", type=str,
                           help = "a list of the name of the font of the axis and the title", default="")
+    optional.add_argument("-S","--size", metavar="INTEGER", type=int,
+                          help = "the size of the font for all the plot", default=12)
+    optional.add_argument("-SP","--scatterplot"
+                          ,help = "Perform the archetypical PELEPlot", action = "store_true")
+    optional.add_argument("-DP","--densityplot"
+                          ,help = "Perform the densityPlot of the metric specified in X", action = "store_true")
     parser._action_groups.append(optional)
     args = parser.parse_args()
 
@@ -142,8 +149,11 @@ def parseArgs():
         font.append("")
     elif len(font)==1 and font[0].lower().find("title")!=-1:
         font.insert(0,"")
+    size = args.size
+    SP = args.scatterplot
+    DP = args.densityplot
 
-    return reports, x_data, y_data, z_data, z_min, z_max, output_path, title, font
+    return reports, x_data, y_data, z_data, z_min, z_max, output_path, title, font, size, SP, DP
 
 
 def addUnits(metric_name):
@@ -219,7 +229,7 @@ def parseAxisData(axis_data):
 def scatterPlot(reports,
                 x_rows=[None, ], y_rows=[None, ], z_rows=[None, ],
                 x_name=None, y_name=None, z_name=None,
-                output_path=None, z_max=None, z_min=None,title="",font=["",""]):
+                output_path=None, z_max=None, z_min=None,title="",font=["",""],size=12):
     """Represent the scatter plot
 
     PARAMETERS
@@ -255,6 +265,7 @@ def scatterPlot(reports,
     z_values = []
     labels = []
     annotations = []
+    pyplot.rcParams.update({'font.size': size})
 
     with open(reports[0], 'r') as report_file:
         line = report_file.readline()
@@ -393,6 +404,41 @@ def scatterPlot(reports,
     else:
         pyplot.show()
 
+def densityPlot(reports,x_rows = [None, ],x_name = None, title ="", size = 12):
+    """Represent the density plot
+
+    PARAMETERS
+    ----------
+    reports : string
+              list of report files to look for data
+    x_rows : list of integers
+             integers which specify the report columns to represent in the X
+             axis
+    x_name : string
+             label of the X axis
+    title: string
+       it sets the title name of the plot 
+    """
+    x_values = []
+    pyplot.rcParams.update({'font.size': size})
+
+    for report in reports:
+        report_file = open(report,'r')
+        i=0
+        for line in report_file:
+            if i!=0:
+                x_values.append(float(line.split()[x_rows[0] - 1]))
+            else:
+                pass
+            i+=1
+
+    sns.distplot(x_values)
+    pyplot.title(title)
+    pyplot.xlabel(x_name)
+    if x_name !=None:
+        pyplot.ylabel("Density (1/{})".format(x_name.split(" ")[1][1:-1]))
+    pyplot.show()
+
 
 def main():
     """Main function
@@ -401,7 +447,7 @@ def main():
     """
 
     # Parse command-line arguments
-    reports, x_data, y_data, z_data, z_min, z_max, output_path, title, font = parseArgs()
+    reports, x_data, y_data, z_data, z_min, z_max, output_path, title, font, size, SP, DP = parseArgs()
 
     # Parse axis data to label it properly
     x_rows, x_name = parseAxisData(x_data)
@@ -409,11 +455,15 @@ def main():
     z_rows, z_name = parseAxisData(z_data)
 
     # Generate the plot
-    scatterPlot(reports,
-                x_rows=x_rows, y_rows=y_rows, z_rows=z_rows,
-                x_name=x_name, y_name=y_name, z_name=z_name,
-                z_min=z_min, z_max=z_max,
-                output_path=output_path,title=title,font=font)
+    if SP:
+        scatterPlot(reports,
+                    x_rows=x_rows, y_rows=y_rows, z_rows=z_rows,
+                    x_name=x_name, y_name=y_name, z_name=z_name,
+                    z_min=z_min, z_max=z_max,
+                    output_path=output_path,title=title,font=font,size=size)
+    if DP:
+        densityPlot(reports,
+                    x_rows=x_rows,x_name=x_name,title=title,size=size)
 
 
 if __name__ == "__main__":
