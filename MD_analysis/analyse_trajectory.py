@@ -124,6 +124,12 @@ class TrajectoryProperties:
 
         return md.rmsd(self.traj, reference, atom_indices = atom_indices)
 
+    #@nanometer_to_angstrom
+    def traj_rmsf(self, reference, atom_indices):
+
+        self.traj.superpose(reference, atom_indices = atom_indices)
+        return md.rmsf(self.traj, None, atom_indices = atom_indices)
+
 
 
     @nanometer_to_angstrom
@@ -333,6 +339,7 @@ def parse_args():
     parser.add_argument("top", type=str, help="Topology file (normally in .gro format)")
     parser.add_argument("-I", "--info", help="Save informfation of trajectory in file", action="store_true")
     parser.add_argument("-R","--rmsd",help="Compute the RMSD between one reference and the trajectory",action="store_true")
+    parser.add_argument("-RF","--rmsf",help="Compute the RMSF between one reference and the trajectory",action="store_true")
     parser.add_argument("-LR","--localrmsd",help="Compute the local RMSD between one reference and the trajectory",type=str,nargs='*')
     parser.add_argument("-D","--distance", type=int, help="Two atoms (number) to compute it distance along the trajectory", nargs=2)
     parser.add_argument("-C", "--contact", type=int, help="Two residues (number of residues) to compute its contacts along the trajectory", nargs=2)
@@ -346,7 +353,7 @@ def parse_args():
 
     args = parser.parse_args()
 
-    return args.traj, args.top, args.rmsd, args.localrmsd, args.distance, args.contact, args.displacement, args.gyration , args.sasa, \
+    return args.traj, args.top, args.rmsd, args.rmsf, args.localrmsd, args.distance, args.contact, args.displacement, args.gyration , args.sasa, \
            args.plot_style, args.plot, args.save_plot, args.time
 
 
@@ -359,7 +366,7 @@ def main():
 
 
 
-    traj, top, rmsd, local_rmsd, distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time = parse_args()
+    traj, top, rmsd, rmsf,local_rmsd, distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time = parse_args()
 
     xtc = OpenFiles(traj, top)    
     if ".xtc" in traj:
@@ -383,6 +390,14 @@ def main():
 
         RMSD = prop.traj_rmsd(trajectory,trajectory.topology.select("resid {}".format(" ".join(local_rmsd))))
         pl = Plotter(x_axis, RMSD,x_label = "Time (ns)", y_label = "RMSD (nm)", title = "Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd)),figure_name="LocalRMSD_{}".format("_".join(local_rmsd)),plot=plot,save=save_plot)
+        pl.scatter_plot()
+        pl.box_plot()
+        pl.density_plot()
+
+    if rmsf:
+
+        RMSF = prop.traj_rmsf(trajectory,trajectory.topology.select("name CA"))
+        pl = Plotter([i for i in range(len(trajectory.topology.select("name CA")))],RMSF,x_label = "Residue number", y_label = "RMSF (nm)", title = "RMSF of the MD simulation",figure_name="RMSF",plot=plot,save=save_plot)
         pl.scatter_plot()
         pl.box_plot()
         pl.density_plot()
