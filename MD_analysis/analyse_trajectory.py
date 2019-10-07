@@ -1,17 +1,20 @@
+# -*- coding: utf-8 -*-
+
 """
 
-                            GROMACS ANALYSER (for molecular dynamics trajectories)
+                            MD ANALYSER (for molecular dynamics trajectories)
 
-This script is for analysing the trajectories obtained by gromacs software. It will use the MDtraj module for such
+This script is for analysing the trajectories obtained by any software. It will use the MDtraj module for such
 analysis. There will be some flag options which the user can pick on and the files and plots will be saved in a new
 created directory
 
-                                    Done by: Ruben Canadas Rodriguez
+                                    Done by: Ruben Canadas Rodriguez & Sergi Rodà Llordés
 
 """
 
 # Let's import packages
-
+import matplotlib
+matplotlib.use("tkagg")
 import mdtraj as md
 import glob, os, sys, argparse
 import numpy as np
@@ -40,8 +43,12 @@ class OpenFiles:
         :return: trajectory loaded
         """
 
-        return md.load_xtc(self.xtc_file, self.top_file)
+        trajectories = []
 
+        for traj in self.xtc_file:
+            trajectories.append(md.load_xtc(traj, self.top_file))
+
+        return trajectories
 
     def load_trr(self):
 
@@ -101,8 +108,6 @@ class TrajectoryProperties:
 
         self.traj = traj
         self.metric = metric
-
-
 
     def nanometer_to_angstrom(func):
 
@@ -301,10 +306,6 @@ class Plotter:
         if self.save: plt.savefig(os.path.join(self.path, "md_{}_densityplot.png".format(self.figure_name)), dpi=self.dpis)
         plt.clf()
 
-
-
-
-
     def superpose_plots(self, Y_array):
 
         """
@@ -335,13 +336,13 @@ def parse_args():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("traj", type=str, help="Trajectory")
+    parser.add_argument("traj", type=str, help="Trajectory", nargs = '*')
     parser.add_argument("top", type=str, help="Topology file (normally in .gro format)")
     parser.add_argument("-I", "--info", help="Save informfation of trajectory in file", action="store_true")
     parser.add_argument("-R","--rmsd",help="Compute the RMSD between one reference and the trajectory",action="store_true")
     parser.add_argument("-RF","--rmsf",help="Compute the RMSF between one reference and the trajectory",action="store_true")
     parser.add_argument("-LR","--localrmsd",help="Compute the local RMSD between one reference and the trajectory",type=str,nargs='*')
-    parser.add_argument("-D","--distance", type=int, help="Two atoms (number) to compute it distance along the trajectory", nargs=2)
+    parser.add_argument("-D","--distance", type=int, help="Two atoms (number) to compute it distance along the trajectory",nargs=2)
     parser.add_argument("-C", "--contact", type=int, help="Two residues (number of residues) to compute its contacts along the trajectory", nargs=2)
     parser.add_argument("-DIS", "--displacement", type=int, help="Atom pair for computing its displacements along the tractory", nargs=2)
     parser.add_argument("-G", "--gyration", help="Compute the gyration at each trajectory frame", action="store_true")
@@ -350,11 +351,12 @@ def parse_args():
     parser.add_argument("-P", "--plot", help="Show plots", action="store_true")
     parser.add_argument("-SP", "--save_plot", help="Save plots in directory", action="store_true")
     parser.add_argument("-T","--time", help="Conversion factor from frames to time-scale", type=float, default=1)
+    parser.add_argument("-AC", "--acid", help="Take into account for Acid-His distance", action="store_true")
 
     args = parser.parse_args()
 
     return args.traj, args.top, args.rmsd, args.rmsf, args.localrmsd, args.distance, args.contact, args.displacement, args.gyration , args.sasa, \
-           args.plot_style, args.plot, args.save_plot, args.time
+           args.plot_style, args.plot, args.save_plot, args.time, args.acid
 
 
 
@@ -364,59 +366,95 @@ def parse_args():
 
 def main():
 
+    def average_property(properties):
+        length, new_prop = [],[]
 
+        for array in properties:
+            length.append(len(array))
 
-    traj, top, rmsd, rmsf,local_rmsd, distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time = parse_args()
+        minimum = min(length)
 
-    xtc = OpenFiles(traj, top)    
-    if ".xtc" in traj:
-    	trajectory = xtc.load_xtc()
+        for array in properties:
+            new_prop.append(array[:minimum])
+
+        return np.average(new_prop, axis=0)
+
+    def execute_plots(x_axis,y_axis,xlabel,ylabel,title = "", figure_name="Plot"):
+        plot_object = Plotter(x_axis, y_axis, x_label = xlabel, y_label = ylabel, title = title, figure_name = figure_name, plot=plot, save=save_plot)
+        plot_object.scatter_plot()
+        plot_object.box_plot()
+        plot_object.density_plot()
+
+    tra, top, rmsd, rmsf, local_rmsd, distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time, acid = parse_args()
+
+    xtc = OpenFiles(tra, top)
+    number_of_frames = 10000000
+    if ".xtc" in tra[0]:
+        trajectory = xtc.load_xtc()
+        for traj in trajectory:
+            if xtc.number_frames(traj) < number_of_frames:
+                number_of_frames = xtc.number_frames(traj)
     else:
-    	trajectory = xtc.load_trajectory()
+        trajectory = xtc.load_trajectory()
 
-    prop = TrajectoryProperties(trajectory)
-    number_of_frames =  xtc.number_frames(trajectory)
     x_axis  = np.arange(0,number_of_frames,1)*time
+    Residue_number = [i for i in range(len(trajectory[0].topology.select("name CA")))]
+
+    RMSD, LRMSD, RMSF, Distances, Contacts = [],[],[],[],[]
+
+    for traj in trajectory:
+
+        prop = TrajectoryProperties(traj)
+
+        if rmsd:
+
+            RMSD.append(prop.traj_rmsd(traj,traj.topology.select("backbone")))
+
+        if local_rmsd is not None:
+
+            LRMSD.append(prop.traj_rmsd(traj,traj.topology.select("resid {}".format(" ".join(local_rmsd)))))
+
+        if rmsf:
+
+            RMSF.append(prop.traj_rmsf(traj,traj.topology.select("name CA")))
+
+        if distance is not None:
+
+            if acid:
+                D1 = prop.compute_distance([distance])
+                D2 = prop.compute_distance([[distance[0],distance[1]+1]])
+                distances = []
+                for i in range(len(D1)):
+                    distances.append(min(D1[i],D2[i]))
+                Distances.append(np.array(distances))
+            
+            else:
+                Distances.append(prop.compute_distance([distance]))
+
+        if contact is not None:
+
+            Contacts.append(prop.compute_contacts([contact]))
+            pl = Plotter(x_axis, contacts, x_label = "Time (ns)", y_label = "Distance ($\AA$)", figure_name="contact", plot=plot, save=save_plot)
 
     if rmsd:
-
-        RMSD = prop.traj_rmsd(trajectory,trajectory.topology.select("backbone"))
-        pl = Plotter(x_axis, RMSD,x_label = "Time (ns)", y_label = "RMSD (nm)", title = "Global RMSD of the MD simulation",figure_name="RMSD",plot=plot,save=save_plot)
-        pl.scatter_plot()
-        pl.box_plot()
-        pl.density_plot()
+        RMSD = average_property(RMSD)
+        execute_plots(x_axis,RMSD,"Time (ns)","RMSD (nm)",title = "Global RMSD of the MD simulation",figure_name = "RMSD")
 
     if local_rmsd is not None:
-
-        RMSD = prop.traj_rmsd(trajectory,trajectory.topology.select("resid {}".format(" ".join(local_rmsd))))
-        pl = Plotter(x_axis, RMSD,x_label = "Time (ns)", y_label = "RMSD (nm)", title = "Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd)),figure_name="LocalRMSD_{}".format("_".join(local_rmsd)),plot=plot,save=save_plot)
-        pl.scatter_plot()
-        pl.box_plot()
-        pl.density_plot()
+        LRMSD = average_property(LRMSD)
+        execute_plots(x_axis,LRMSD,"Time (ns)","RMSD (nm)",title = "Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd)), figure_name = "LocalRMSD_{}".format("_".join(local_rmsd)))
 
     if rmsf:
-
-        RMSF = prop.traj_rmsf(trajectory,trajectory.topology.select("name CA"))
-        pl = Plotter([i for i in range(len(trajectory.topology.select("name CA")))],RMSF,x_label = "Residue number", y_label = "RMSF (nm)", title = "RMSF of the MD simulation",figure_name="RMSF",plot=plot,save=save_plot)
-        pl.scatter_plot()
-        pl.box_plot()
-        pl.density_plot()
+        RMSF = average_property(RMSF)
+        execute_plots(Residue_number,RMSF,"Residue number","RMSF (nm)",title = "RMSF of the MD simulation",figure_name = "RMSF")
 
     if distance is not None:
-
-        distances = prop.compute_distance([distance])
-        pl = Plotter(x_axis, distances, x_label = "Time (ns)", y_label = "Distance ($\AA$)", title = "Distance of the MD simulation between atoms {}".format(" and ".join(str(index) for index in distance)), figure_name="distance_{}".format("_".join(str(index) for index in distance)), plot=plot, save=save_plot)
-        pl.scatter_plot()
-        pl.box_plot()
-        pl.density_plot()
+        Distances = average_property(Distances)
+        execute_plots(x_axis,Distances,"Time (ns)","Distance ($\AA$)",title = "Distance of the MD simulation between atoms {}".format(" and ".join(str(index) for index in distance)),figure_name = "distance_{}".format("_".join(str(index) for index in distance)))
 
     if contact is not None:
-
-        contacts = prop.compute_contacts([contact])
-        pl = Plotter(x_axis, contacts, figure_name="contact", plot=plot, save=save_plot)
-        pl.scatter_plot()
-        pl.box_plot()
-
+        Contacts = average_property(Contacts)
+        execute_plots(x_axis,Contacts,"Time (ns)","Distance ($\AA$)",title = "Distance of the MD simulation between residues {}".format(" and ".join(str(index) for index in contact)),figure_name = "contact_{}".format("_".join(str(index) for index in contact)))
 
 
 

@@ -436,7 +436,7 @@ def densityPlot(reports,x_rows = [None, ],x_name = None, title ="", size = 12):
     pyplot.title(title)
     pyplot.xlabel(x_name)
     if x_name !=None:
-        pyplot.ylabel("Density (1/{})".format(x_name.split(" ")[1][1:-1]))
+        pyplot.ylabel("Density (1/{})".format(x_name.split("(")[1][0:-1]))
     pyplot.show()
 
 
