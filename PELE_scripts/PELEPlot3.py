@@ -7,6 +7,9 @@ import os
 import glob
 import argparse as ap
 from matplotlib import pyplot
+import numpy as np
+import matplotlib
+matplotlib.use("tkagg")
 import seaborn as sns
 from math import isnan
 
@@ -121,6 +124,8 @@ def parseArgs():
                           ,help = "Perform the archetypical PELEPlot", action = "store_true")
     optional.add_argument("-DP","--densityplot"
                           ,help = "Perform the densityPlot of the metric specified in X", action = "store_true")
+    optional.add_argument("-PP","--pointplot"
+                          ,help = "Perform the pointPlot of the metric specified in X and Y", action = "store_true")
     parser._action_groups.append(optional)
     args = parser.parse_args()
 
@@ -152,8 +157,9 @@ def parseArgs():
     size = args.size
     SP = args.scatterplot
     DP = args.densityplot
+    PP = args.pointplot
 
-    return reports, x_data, y_data, z_data, z_min, z_max, output_path, title, font, size, SP, DP
+    return reports, x_data, y_data, z_data, z_min, z_max, output_path, title, font, size, SP, DP, PP
 
 
 def addUnits(metric_name):
@@ -419,6 +425,7 @@ def densityPlot(reports,x_rows = [None, ],x_name = None, title ="", size = 12):
     title: string
        it sets the title name of the plot 
     """
+    
     x_values = []
     pyplot.rcParams.update({'font.size': size})
 
@@ -439,6 +446,47 @@ def densityPlot(reports,x_rows = [None, ],x_name = None, title ="", size = 12):
         pyplot.ylabel("Density (1/{})".format(x_name.split("(")[1][0:-1]))
     pyplot.show()
 
+    
+def pointPlot(reports,x_rows = [None, ],x_name = None,y_rows = [None, ],y_name = None, title ="", size = 12):
+    """Represent the scatter point plot
+
+    PARAMETERS
+    ----------
+    reports : string
+              list of report files to look for data
+    x_rows : list of integers
+             integers which specify the report columns to represent in the X
+             axis
+    x_name : string
+             label of the X axis
+    y_rows : list of integers
+             integers which specify the report columns to represent in the Y
+             axis
+    y_name : string
+             label of the Y axis
+    title: string
+       it sets the title name of the plot 
+    """    
+
+    x_values,y_values = [],[]
+    pyplot.rcParams.update({'font.size': size})
+
+    for report in reports:
+        report_file = open(report,'r')
+        i=0
+        for line in report_file:
+            if i!=0:
+                x_values.append(float(line.split()[x_rows[0] - 1]))
+                y_values.append(float(line.split()[y_rows[0] - 1]))
+            else:
+                pass
+            i+=1
+            
+    pyplot.plot(x_values,y_values)
+    pyplot.title(title)
+    pyplot.xlabel(x_name)
+    pyplot.ylabel(y_name)
+    pyplot.show()
 
 def main():
     """Main function
@@ -447,7 +495,7 @@ def main():
     """
 
     # Parse command-line arguments
-    reports, x_data, y_data, z_data, z_min, z_max, output_path, title, font, size, SP, DP = parseArgs()
+    reports, x_data, y_data, z_data, z_min, z_max, output_path, title, font, size, SP, DP, PP = parseArgs()
 
     # Parse axis data to label it properly
     x_rows, x_name = parseAxisData(x_data)
@@ -464,6 +512,9 @@ def main():
     if DP:
         densityPlot(reports,
                     x_rows=x_rows,x_name=x_name,title=title,size=size)
+    if PP:
+        pointPlot(reports,
+                  x_rows=x_rows, y_rows=y_rows,x_name=x_name,y_name=y_name,title=title,size=size)
 
 
 if __name__ == "__main__":
