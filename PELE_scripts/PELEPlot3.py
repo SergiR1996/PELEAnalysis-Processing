@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-# Imports
+# Global imports
 from __future__ import unicode_literals
 import os
 import glob
@@ -12,6 +12,9 @@ import matplotlib
 matplotlib.use("tkagg")
 import seaborn as sns
 from math import isnan
+
+# Local imports
+from PELEParseReports import *
 
 
 # Script information
@@ -31,41 +34,6 @@ Dict_of_fonts={"title" : {'family': 'serif',
 
 
 # Functions
-def parseReports(reports_to_parse, parser):
-    """It identifies the reports to add to the plot
-
-    PARAMETERS
-    ----------
-    reports_to_parse : list of strings
-                       all the report files that want to be added to the plot
-    parser : ArgumentParser object
-             contains information about the command line arguments
-
-    RETURNS
-    -------
-    parsed_data : tuple of a list and a string
-                  the list specifies the report columns that want to be plotted
-                  in the axis and the string sets the name of the axis
-    """
-
-    reports = []
-
-    for reports_list in reports_to_parse:
-        trajectories_found = glob.glob(reports_list)
-        if len(trajectories_found) == 0:
-            print("Warning: path to report file \'" +
-                  "{}".format(reports_list) + "\' not found.")
-        for report in glob.glob(reports_list):
-            reports.append(report)
-
-    if len(reports) == 0:
-        print ("Error: list of report files is empty.")
-        parser.print_help()
-        exit(1)
-
-    return reports
-
-
 def parseArgs():
     """Parse arguments from command-line
 

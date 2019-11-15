@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
 
-# Imports
+# Global imports
 from __future__ import unicode_literals
 import os
 import glob
 import argparse as ap
+import pandas as pd
 import numpy as n
+
+# Local imports
+from PELEParseReports import *
 
 
 # Script information
@@ -16,41 +20,9 @@ __maintainer__="Sergi Rodà Llordés"
 __email__="sergi.rodallordes@bsc.es"
 
 # Functions
-def parseReports(reports_to_parse, parser):
-    """It identifies the reports to add to the storing table
-
-    PARAMETERS
-    ----------
-    reports_to_parse : list of strings
-                       all the report files that want to be added to the storing table
-    parser : ArgumentParser object
-             contains information about the command line arguments
-
-    RETURNS
-    -------
-    parsed_data : tuple of a list and a string
-                  the list specifies the report files that will be stored in the csv file.
-    """
-
-    reports = []
-
-    for reports_list in reports_to_parse:
-        trajectories_found = glob.glob(reports_list)
-        if len(trajectories_found) == 0:
-            print("Warning: path to report file \'" +
-                  "{}".format(reports_list) + "\' not found.")
-        for report in glob.glob(reports_list):
-            reports.append(report)
-
-    if len(reports) == 0:
-        print("Error: list of report files is empty.")
-        parser.print_help()
-        exit(1)
-
-    return reports
-
 def parseArgs():
-    """Parse arguments from command-line
+    """
+    Parse arguments from command-line
 
     RETURNS
     -------
@@ -58,6 +30,10 @@ def parseArgs():
               list of report files to look for data
     output_path : string
                   output directory where the csv file will be saved
+    catalytic_event : list of indices
+                  list of column indices
+    to_drop : list of strings
+                  list of column names that want to be dropped
     """
 
     parser = ap.ArgumentParser(description='Script that returns a csv file with the mean of the numerical \
@@ -68,58 +44,119 @@ def parseArgs():
                           type=str, nargs='*', help="path to report files")
     optional.add_argument("-o", "--output", metavar="PATH", type=str,
                           help="output path to save figure", default="PELE_results")
+    optional.add_argument("-CE","--catalytic_event", metavar="LIST",type=str,
+                          nargs='*',help="index of the column where catalytic distances reside (they must be 3)")
+    optional.add_argument("-TD","--to_drop", metavar="LIST",type=str,
+                          nargs='*',help="column names that want to be dropped", default=[])
     parser._action_groups.append(optional)
     args = parser.parse_args()
 
     reports = parseReports(args.input, parser)
 
-    output_path = args.output
+    output_path, catalytic_event, to_drop = args.output, args.catalytic_event, args.to_drop
 
-    return reports, output_path
+    if catalytic_event is not None:
+        catalytic_event = [int(i)-1 for i in catalytic_event]
 
-def Storeresults(reports):
-    """Take the PELE simulation report files and returns the results stored in a dict
+    return reports, output_path, catalytic_event, to_drop
 
-    RETURNS
-    -------
-    Results: dictionary of lists
-             dictionary containing the mean of the different quantitative parameters
+def Storeresults(reports,catalytic_event, output_path, to_drop):
+    """
+    Take the PELE simulation report files and returns the results stored in a CSV file
+
+    OUTPUT
+    ------
+    output_path.csv file with the average metrics of the PELE simulation.
     """
 
-    Results = {}
+    Results,means_aux, cat_events,cat_trajectories = {},[], 0, 0
 
-    for report in reports:
-        reportID = int(os.path.basename(report).split('_')[-1].split('.')[0])
-        with open(report,'r') as report_file:
-            if '0' not in Results:
-                line = report_file.readline()
-                Results[0] = line.split("    ")[3:(len(line.split()))]
-                Means = [[] for x in range(3,(len(line.split())))]
-            else:
-                next(report_file)
-            for i, line in enumerate(report_file):
-                for element,i in zip(line.split(),range(len(line.split()))):
-                    if i>=3:
-                        Means[i-3].append(float(element))
-            Results[reportID]=[str(n.mean(Means[i])) for i in range(len(Means))]
+    for i,report in enumerate(reports):
+        rep = pd.read_csv(report,sep="    ")
+        means_aux.append(list(n.mean(rep,axis=0))[3:])
+        CE = rep[(rep[rep.columns[catalytic_event[0]]] <= 3.5) & (rep[rep.columns[catalytic_event[1]]] <= 3.5) & (rep[rep.columns[catalytic_event[2]]] <= 3.5)].shape[0]
+        cat_events += CE
+        if CE!=0:
+            cat_trajectories += 1
+        if i==0:
+            column_names = list(rep.columns[3:])
 
-    return Results
 
-def Outputresults(Results,output_path):
-    """Take the PELE simulation results and report the means with a csv table
+    means = n.mean(means_aux,axis=0)
+    std = n.std(means_aux,axis=0)
+    means_std = [];column_names.append("cat_events");column_names.append("cat_n_trajectories")
 
-    RETURNS
-    -------
-    Results: dictionary of lists
-             dictionary containing the mean of the different quantitative parameters
-    """
-    Output_file = open(output_path,"wt")
-    Sorted_results = sorted(list(Results.items()))
+    for i in range(len(means)):
+        means_std.append(str(means[i])+"(+-)"+str(std[i]))
 
-    for i in range(len(Sorted_results)):
-        Output_file.write(str(Sorted_results[i][0])+','+",".join(Sorted_results[i][1])+"\n")
+    means_std.append(cat_events);means_std.append(cat_trajectories)
 
-    Output_file.close()
+    for key,item in zip(column_names,means_std):
+        Results[key] = item
+
+    df = pd.DataFrame(Results,index=["Report_summary"])
+    df.drop(to_drop, axis = 1, inplace=True)
+    df.to_csv(output_path+".csv")
+
+
+
+    #     reportID = int(os.path.basename(report).split('_')[-1].split('.')[0])
+    #     with open(report,'r') as report_file:
+
+    #         cat_counting = 0
+    #         if '0' not in Results:
+    #             line = report_file.readline()
+    #             Results = dict.fromkeys(line.split("    ")[3:(len(line.split()))])
+    #             Means = [[] for x in range(3,(len(line.split())))]
+    #         else:
+    #             next(report_file)
+
+    #         for i, line in enumerate(report_file):
+
+    #             if catalytic_event is not None:
+    #                 if float(line.split()[catalytic_event[0]])<=3.5 and float(line.split()[catalytic_event[1]])<=3.5 and (float(line.split()[catalytic_event[2]])<=3.5 or float(line.split()[catalytic_event[2]+1])<=3.5):
+    #                     cat_counting+=1
+
+    #             for element,i in zip(line.split(),range(len(line.split()))):
+    #                 if i>=3:
+    #                     Means[i-3].append(float(element))
+
+    #         means_aux.append(n.array([n.mean(Means[i]) for i in range(len(Means))]))
+    #         cat_events.append((cat_counting,reportID))
+
+    # cat_events = n.array(cat_events)
+    # means = n.mean(means_aux,axis=0)
+    # std = n.std(means_aux,axis=0)
+    # Results.pop("\n",None)
+
+    # for i,elem in enumerate(Results.keys()):
+    #     Results[elem] = str(round(means[i],3))+"(+-)"+str(round(std[i],3))
+
+    # if catalytic_event is not None:
+    #     cat_ev = []
+    #     Results["cat_events"] = n.sum(cat_events,axis=0)[0]
+
+    #     for elem in cat_events:
+    #         if elem[0]!=0:
+    #             cat_ev.append(elem)
+
+    #     Results["cat_n_trajectories"] = len(cat_ev)
+
+    # return Results
+
+# def Outputresults(Results,output_path):
+#     """Take the PELE simulation results and report the means with a csv table
+
+#     RETURNS
+#     -------
+#     Results: dictionary of lists
+#              dictionary containing the mean of the different quantitative parameters
+#     """
+
+#     df = pd.DataFrame(Results,index=["Report_summary"])
+#     df.drop(["currentEnergy"], axis = 1, inplace=True)
+
+#     df.to_csv(output_path+".csv")
 
                 
 
@@ -130,13 +167,10 @@ def main():
     """
 
     # Parse command-line arguments
-    reports, output_path = parseArgs()
+    reports, output_path, catalytic_event, to_drop  = parseArgs()
 
-    # Store the results in a dictionary
-    Results = Storeresults(reports)
-
-    # Save the stored results in an output file
-    Outputresults(Results,output_path)
+    # Store the results in a CSV file
+    Storeresults(reports,catalytic_event, output_path, to_drop)
 
 
 if __name__ == "__main__":

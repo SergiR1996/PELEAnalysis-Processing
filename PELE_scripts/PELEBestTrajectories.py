@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 
-# Imports
+# Global imports
 from __future__ import unicode_literals
 import os
 import glob
 import argparse as ap
 
+# Local imports
+from PELEParseReports import *
 
 # Script information
 __author__ = "Sergi Rodà Llordés"
@@ -16,40 +18,6 @@ __email__="sergi.rodallordes@bsc.es"
 
 
 # Functions
-def parseReports(reports_to_parse, parser):
-    """It identifies the reports to add to the output file
-
-    PARAMETERS
-    ----------
-    reports_to_parse : list of strings
-                       all the report files that want to be tested as best trajectories
-    parser : ArgumentParser object
-             contains information about the command line arguments
-
-    RETURNS
-    -------
-    parsed_data : tuple of a list and a string
-                  the list specifies the report columns that want to be stored as the best trajectories
-    """
-
-    reports = []
-
-    for reports_list in reports_to_parse:
-        trajectories_found = glob.glob(reports_list)
-        if len(trajectories_found) == 0:
-            print("Warning: path to report file \'" +
-                  "{}".format(reports_list) + "\' not found.")
-        for report in glob.glob(reports_list):
-            reports.append(report)
-
-    if len(reports) == 0:
-        print("Error: list of report files is empty.")
-        parser.print_help()
-        exit(1)
-
-    return reports
-
-
 def parseArgs():
     """Parse arguments from command-line
 
