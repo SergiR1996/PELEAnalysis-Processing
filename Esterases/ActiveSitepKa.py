@@ -2,8 +2,7 @@
 
 
 # Imports
-import os,sys,re
-import subprocess
+import sys,re,os
 import glob
 import numpy as n
 
@@ -36,10 +35,11 @@ class pKa:
     @property
     def pI(self):
 
-        return self.__pI_folded,self.__pI_unfolded,self.__pI_active_site
+        return [self.__pI_folded,self.__pI_unfolded,self.__pI_active_site]
 
     def propka(self):
-        """Take the PDB file and calculate the pKa of titrable residues using propka
+        """
+        Take the PDB file and calculate the pKa of titrable residues using propka
 
         PARAMETERS
         ----------
@@ -58,23 +58,17 @@ class pKa:
         index_pKa1,index_pKa2 = 0,0
 
         try:
-            subprocess.call("propka31" +"%s" % self.__PDB + "-q")
+            os.system("propka31 %s -q"%self.__PDB)
             print("Computing pI values...")
 
         except:
-            answer = input("propka is not installed. Do you want to install it? [Y/N]")
-            if answer.lower() == "y" or answer.lower() == "yes":
-                #subprocess.call(["git","clone","https://github.com/jensengroup/propka-3.1"])
-                os.system("cd propka-3.1");os.system("python setup.py install --user")
-                subprocess.call("propka31" +"%s" % self.__PDB + "-q")
-            elif answer.lower() == "n" or answer.lower() == "No":
-                exit()
-            else:
-                pass
+            print("propka is not installed. To install it git clone the following repository: https://github.com/jensengroup/propka-3.1")
+            print("Then: python setup.py install --user")
+            exit()
 
         else:
             os.system("rm *.propka_input")
-            pKa_file = open("%s.pka"%self.__PDB[self.__PDB.rindex("/")+1:-4])
+            pKa_file = open("%s.pka" %self.__PDB[self.__PDB.rindex("/")+1:-4])
             for line in pKa_file:
                 if "SUMMARY OF THIS PREDICTION" in line:
                     index_pKa1=1
@@ -93,7 +87,8 @@ class pKa:
             os.system("rm *.pka")
 
     def Neighbouratoms(self):
-        """Take the atoms near the active site to compute the pI around this area
+        """
+        Take the atoms near the active site to compute the pI around this area
 
         PARAMETERS
         ----------
@@ -138,9 +133,10 @@ class pKa:
         self.__pI_active_site = n.mean(values)
 
     def computepI(self):
-        """It executes the methods of the class sequentially,
-        returning the 3 computed values of pI"""
+        """
+        It executes the methods of the class sequentially,
+        returning the 3 computed values of pI
+        """
 
         self.propka()
         self.Neighbouratoms()
-        self.pI()

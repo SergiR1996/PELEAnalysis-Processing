@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
+
+# Global Imports
 import sys, os, glob, math
 import pandas as pd
-#from ResidueTypes import NON_POLAR, POLAR, AROMATIC, POSITIVE_CHARGE, NEGATIVE_CHARGE
 
 NON_POLAR = ["gly", "ala", "val", "leu", "ile", "pro","met"]
 AROMATIC = ["phe", "tyr", "trp"]
@@ -11,9 +13,9 @@ NEGATIVE_CHARGE = ["asp", "glu"]
 #GENERATE A PARENT CLASS TO COPE WITH PDB OBJECTS
 
 __all__ = ["Esterase", "ActiveSiteDescriptors"]
-__author__="Ruben Canadas Rodriguez"
-__mail__="ruben.canadas@bsc.es"
-__maintainer__="Ruben Canadas Rodriguez"
+__author__=["Ruben Canadas Rodriguez","Sergi Rodà Llordés"]
+__mail__=["ruben.canadas@bsc.es","sergi.rodallordes@bsc.es"]
+__maintainer__=["Ruben Canadas Rodriguez","Sergi Rodà Llordés"]
 __version__=1.0
 
 
@@ -30,16 +32,13 @@ class SiteMapError(Error):
 
 	pass
 
-
-
 class Esterase(object):
 
 	"""
 
 	This class have the methods to find the canonical catalytic triad for an esterase given a pdb file.
-	It basically tries to find Ser-His-Asp triad using some distance thresholds. Maybe some esterase have differences
-	like a glutamic acid instead of an aspartate
-	TODO: Implement glutamic option!!
+	It basically tries to find Ser-His-Asp, Ser-His-Glu, and Ser-Lys-Tyr 
+	triads using some distance thresholds.
 	
 	"""
 
@@ -54,18 +53,27 @@ class Esterase(object):
 	def __len__(self):
 
 		"""
-		Returns the length of the file
+		Returns the length of the file.
 		"""
 
 		return len(self.__protein)
 
 	def __str__(self):
 
+		"""
+		Returns the name of the esterase of the pdb file.
+		"""
+
 		return "esterase: {}".format(self.__pdb)
 
 	
 
 	def _PDBParser(self):
+
+		"""
+		Reads the lines of the pdb file.
+		"""            
+
 		try:
 			with open(self.__pdb ,"r") as infile:
 				return infile.readlines()
@@ -75,10 +83,19 @@ class Esterase(object):
 
 	def _ResidueDetector(self, residue_name):
 
+		"""
+		PARAMETERS
+		----------
+		residue_name : string
+		            Name of the residue to find its coordinates
+
+		Takes the coordinates of all the atoms from the residues that could be
+		in the catalytic triad.
+		""" 
 
 		resid = {}
 		if residue_name == "SER": atom_name = "HG"
-		elif residue_name == "HIS_1": #We have his_1 and his_2 since we are taking into account two atoms for histidine since it interacts with serine and aspartate
+		elif residue_name == "HIS_1":
 			residue_name = "HIS"
 			atom_name = "NE2"
 		elif residue_name == "HIS_2":
@@ -102,8 +119,8 @@ class Esterase(object):
 
 		"""
 		This method finds the catalytric triad of a given 
-		esterase (in a pdb) according to pre-fixed 
-		thresholds
+		esterase (in a pdb file) according to pre-fixed 
+		thresholds.
 		"""
 
 		def ComputeDistance(atom1, atom2):
@@ -127,7 +144,7 @@ class Esterase(object):
 				if(ComputeDistance(value3, value4) <= 4.5): 
 					his_asp.append("{}-{}".format(key3, key4))
 
-		#We take those residues which have the same histidine, meaning that  his is interacting with a serine and an aspartate and the Cat. triad is being formed!
+		#We take those residues which have the same histidine, meaning that  his is interacting with a serine and an aspartate and the catalytic triad is being formed.
 		for elem1 in ser_his:
 			serine = elem1.split("-")[0]
 			histidine1 = elem1.split("-")[-1]
@@ -137,7 +154,7 @@ class Esterase(object):
 				if histidine1==histidine2: catalytic_residues = "{}-{}-{}".format(serine, histidine1, aspartic)
 
 		his_glu = []
-		if catalytic_residues is None: #If the aspartate is not found is because maybe there is a glutamate instead
+		if catalytic_residues is None: #If the aspartate is not found is because maybe there is a glutamate instead in the catalytic triad.
 			for key3, value3 in result[2].items():
 				for key5, value5 in result[4].items():
 					if(ComputeDistance(value3, value5) <= 4.5): 
@@ -154,7 +171,7 @@ class Esterase(object):
 
 		ser_lys = []
 		lys_tyr = []
-		if catalytic_residues is None:
+		if catalytic_residues is None: #If neither the aspartate or histidine are not found is because maybe there is a lysine and tyrosine instead in the catalytic triad.
 			for key6, value6 in result[0].items():
 				for key7, value7 in result[5].items():
 					if (ComputeDistance(value6, value7) <= 4.0):
@@ -199,9 +216,12 @@ class ActiveSiteDescriptors(object):
 
 	def __init__(self, pdb, resid, active_type, radi=10):
 
+
 		"""
-		Constructor of the class
+		This class takes the active site of a pdb file and gets a set of active site
+		descriptors.
 		"""
+
 
 		self.__resid = resid #list indicating type and num. ex: ["Glu", 88]
 		#self.__selection_type = "CA"
@@ -214,10 +234,18 @@ class ActiveSiteDescriptors(object):
 
 
 	def __str__(self):
+
+		"""
+		Returns the name of the esterase of the pdb file.
+		"""
 		
 		return "{}".format(self.__pdb)
 
 	def __PDBParser(self):
+
+		"""
+		Reads the lines of the pdb file.
+		""" 
 
 		try:
 			infile = open(self.__pdb, "r")
@@ -248,6 +276,10 @@ class ActiveSiteDescriptors(object):
 
 	def _ActiveSiteParser(self):
 
+		"""
+		Gets the coordinates of the active site in the PDB file.
+		""" 
+
 		try:
 			coords = []
 			for line in self.__lines:
@@ -263,6 +295,12 @@ class ActiveSiteDescriptors(object):
 
 
 	def _GetNeighboringAtoms(self):
+
+		"""
+		Gets the residues that are near the catalytic Ser residue
+		according to the euclidean distance and the threshold is
+		specified by the radius attribute.
+		""" 
 
 		def ComputeDistance(atom1, atom2):
 
@@ -288,14 +326,15 @@ class ActiveSiteDescriptors(object):
 							neighboring_residues.append(residue)
 						neighbors_file.write("{},{},{}\n".format(x,y,z))
 		neighbors_file.close()
+		
 		return neighboring_residues
 
 
 	def _ActiveSiteResidueTypes(self):
 
 		"""
-		This method computes the percentatge of types of residues
-		Types are based on physicochemical properties of the aminoacids
+		This method computes the relative abundance (%) of types of residues.
+		Types are based on physicochemical properties of the aminoacids.
 		"""
 
 		resids = [elem[0] for elem in self.__neighboring_residues]
@@ -322,34 +361,51 @@ class ActiveSiteDescriptors(object):
 class SiteMapDescriptors(object):
 
 
+	"""
+	This class takes the active site of a pdb file and gets the SiteMap descriptors.
+	"""
+
+
 	def __init__(self, pdb, path):
 
 		self.__pdb = pdb
+		self.__pdb_name = self.__pdb.split("/")[-1]
 		self.__path = path
 		self.__schrodinger_utilities_path = "/opt/schrodinger2018-4/utilities"
 		self.__schrodinger_path = "/opt/schrodinger2018-4"
-		self.__cat, self.__resid = Esterase(os.path.join(self.__path, self.__pdb))._DetectActiveSite()
-		self.__jobname = self.__pdb.split("/")[-1].split(".")[0]
+		self.__cat, self.__resid, _ = Esterase(self.__pdb)._DetectActiveSite()
+		self.__jobname = self.__pdb_name.split(".")[0]
 
 	def ConvertPDBToMAE(self):
+            
+		"""
+		This methods converts your pdb file into mae file to compute the SiteMap descriptors later on.
+		"""
 
-		os.system("{}/pdbconvert -ipdb {} -omae {}".format(self.__schrodinger_utilities_path, os.path.join(self.__path, self.__pdb), os.path.join(self.__path, self.__pdb.split(".")[0]+".mae")))
+		os.system("{}/pdbconvert -ipdb {} -omae {}".format(self.__schrodinger_utilities_path, self.__pdb, os.path.join(self.__path, self.__pdb_name.split(".")[0]+".mae")))
 
 	def SiteMap(self):
 
 		"""
+		THe method computes the SiteMap descriptors.
+		
 		verbosity 3 in order to obtain the eval file with 
 		the desired properties
 		"""
+		
 		try:
-			os.system("{}/sitemap -siteasl \"res.num {}\" -sitebox 5 -maxsites 1 -maxvdw  0.8 -maxdist 12 -enclosure 0.3 -LOCAL -verbosity 3 -j {} -prot {}".format(self.__schrodinger_path, self.__resid[1], self.__jobname, os.path.join(self.__path,self.__pdb.split(".")[0]+".mae")))
+			os.system("{}/sitemap -siteasl \"res.num {}\" -sitebox 5 -maxsites 1 -maxvdw  0.8 -maxdist 12 -enclosure 0.3 -LOCAL -verbosity 3 -j {} -prot {}".format(self.__schrodinger_path, self.__resid[1], self.__jobname, os.path.join(self.__path,self.__pdb_name.split(".")[0]+".mae")))
 		except Exception as e:
 			raise SiteMapError("SiteMap could not be used: {}".format(e))
 		
 	def ParseSiteMapFiles(self):
-
+            
+		"""
+		This methods parses the SiteMap log file to obtain the descriptors.
+		"""
+		
 		file_name = self.__jobname+"_site_1_eval.log"
-		infile = open(file_name, "r")
+		infile = open(file_name, "r", errors = "ignore")
 		lines = infile.readlines(); infile.close()
 		nums_list = None
 		#properties = ["SiteScore", "size", "Dscore", "volume", "exposure", "enclosure", "contact", "hydrophobic", "hydrophilic", "balance", "don/acc"]
@@ -358,6 +414,7 @@ class SiteMapDescriptors(object):
 				scores = lines[idx]
 				nums = lines[idx+1]
 				nums_list = [nums.split("   ")[i].strip() for i in range(11)]
+
 		return nums_list
 
 

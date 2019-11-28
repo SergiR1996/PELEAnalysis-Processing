@@ -6,14 +6,14 @@ import os,sys
 import argparse as ap
 import pandas as pd
 
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler,PowerTransformer, QuantileTransformer
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, RandomizedSearchCV,\
-										 StratifiedKFold, cross_val_predict, cross_validate, learning_curve, GroupKFold, ShuffleSplit
+										 StratifiedKFold, cross_val_predict, cross_validate, learning_curve, GroupKFold, ShuffleSplit,StratifiedShuffleSplit
 import numpy as np
 import scipy, pickle
 from sklearn.feature_selection import RFE, RFECV
 from sklearn.externals import joblib
-from sklearn.metrics import recall_score, confusion_matrix, classification_report
+from sklearn.metrics import recall_score, confusion_matrix, classification_report, roc_curve, auc
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import matplotlib
@@ -159,6 +159,12 @@ class TransformDataset(Dataset):
 			scaler = MinMaxScaler().fit(self._X_train)
 		elif self.__scaler_type == "robust":
 			scaler = RobustScaler().fit(self._X_train)
+		elif self.__scaler_type == "powert":
+			scaler = PowerTransformer(method='yeo-johnson').fit(self._X_train) # Yeo-Johnson method is used as negative values are also present in features.
+		elif self.__scaler_type == "qtn":
+			scaler = QuantileTransformer(output_distribution='normal').fit(self._X_train)
+		elif self.__scaler_type == "qtu":
+			scaler = QuantileTransformer(output_distribution='uniform').fit(self._X_train)
 
 		outfile = open(os.path.join(self._path, "scaler_{}.pkl".format(self.__scaler_type)), "wb")
 		pickle.dump(scaler, outfile)
@@ -184,7 +190,7 @@ class CreateModel(TransformDataset):
 
 	def __init__(self,to_drop):
 
-		csv, hey, target, nfeatures, scaler, test_size, n_iter, n_jobs, forward_floating, train, rfe, nofeature, test, model_file = self.parseArgs()
+		csv, hey, target, nfeatures, scaler, test_size, n_iter, n_jobs, forward_floating, train, rfe, nofeature, roc, test, model_file = self.parseArgs()
 		drop = to_drop
 
 		super(CreateModel, self).__init__(csv, to_drop, target, scaler, test_size)
@@ -196,10 +202,11 @@ class CreateModel(TransformDataset):
 		self.__train = train
 		self.__rfe = rfe
 		self.__nofeature = nofeature
+		self.__roc = roc
 		self.__test = test
 		self.__model_file = model_file
 
-		if self.__train:
+		if self.__train or self.__roc:
 
 			self._X_transformed = pd.DataFrame(self._X_transformed,columns=self._X_train.columns.values)
 			if self.__rfe:
@@ -216,6 +223,10 @@ class CreateModel(TransformDataset):
 	@property
 	def train(self):
 		return self.__train
+
+	@property
+	def roc(self):
+		return self.__roc
 
 	def parseArgs(self):
 		"""
@@ -237,19 +248,20 @@ class CreateModel(TransformDataset):
 		optional.add_argument("-T", "--train", help="Perform the cross-validation training", action="store_true")
 		optional.add_argument("-R", "--rfe", help="Use RecursiveFeatureElimination for feature selection", action="store_true")
 		optional.add_argument("-NS", "--nofeature", help="Do not perform feature selection", action="store_true")
-		optional.add_argument("-TE", "--test", help="Use the test set with the generated model", action="store_true")		
+		optional.add_argument("-TE", "--test", help="Use the test set with the generated model", action="store_true")
+		optional.add_argument("-RC", "--roc_curve", help="Generate the ROC curve of the model with the calculated AUC", action="store_true")		
 		optional.add_argument("-mf","--model_file",metavar="FILE",type=str,help="Path of the model pickle file",default="")		
 		parser._action_groups.append(optional)
 		args = parser.parse_args()
 
-		return args.csv, args.to_drop, args.target, args.nfeatures, args.scaler, args.test_size, args.iterations, args.n_jobs, args.SequentialFeatureSelection, args.train, args.rfe, args.nofeature, args.test, args.model_file
+		return args.csv, args.to_drop, args.target, args.nfeatures, args.scaler, args.test_size, args.iterations, args.n_jobs, args.SequentialFeatureSelection, args.train, args.rfe, args.nofeature, args.roc_curve, args.test, args.model_file
 
 	def __RandomSearch(self):
 
 		param_grid = {"C": scipy.stats.uniform(loc=0, scale=4), "gamma":scipy.stats.expon(scale=.1), 
 																"kernel":["linear","rbf","sigmoid"], "class_weight" : ["balanced", None]}
 		grid = RandomizedSearchCV(estimator=SVC(), param_distributions=param_grid, 			
-													n_jobs=self.__n_jobs,  cv=ShuffleSplit(n_splits=10, test_size = .3, random_state = self._random_state), verbose=self.__verbose, n_iter=self.__n_iter) 
+													n_jobs=self.__n_jobs,  cv=StratifiedShuffleSplit(n_splits=10, test_size = .3, random_state = self._random_state), verbose=self.__verbose, n_iter=self.__n_iter) 
 		grid_result = grid.fit(self.__sf, self._y_train)
 
 		return grid_result.best_params_
@@ -290,7 +302,7 @@ class CreateModel(TransformDataset):
 			model.fit(self.__sf, self._y_train)
 			joblib.dump(model, os.path.join(self._path, "svm_{}_clf_{}_{}_{}_{}_{}.pkl".format(self._target,best_params["kernel"], best_params["C"], best_params["gamma"], self.__nfeatures , self.__forward_floating)))
 			if cross_val:
-				scores = cross_val_score(model, self.__sf, self._y_train, cv=ShuffleSplit(n_splits=10, test_size = .3, random_state = self._random_state))
+				scores = cross_val_score(model, self.__sf, self._y_train, cv=StratifiedShuffleSplit(n_splits=10, test_size = .3, random_state = self._random_state))
 				self.plot(SVC(C=best_params["C"], gamma=best_params["gamma"], kernel=best_params["kernel"], class_weight=best_params["class_weight"]), self.__sf, self._y_train)
 				print("scores: {}\n mean_score: {}(+/-{})\n best_params: {}".format(scores, scores.mean(),scores.std(), best_params))
 				outfile = open(os.path.join(self._path, "svm_{}_clf_{}_{}_{}_{}_{}.txt".format(self._target,best_params["kernel"], best_params["C"], best_params["gamma"],
@@ -298,6 +310,52 @@ class CreateModel(TransformDataset):
 				outfile.write("scores: {}\n mean_score: {}(+/-{})\n best_params: {}".format(scores, scores.mean(),scores.std(), best_params)); outfile.close()
 
 				return scores.mean()
+
+	def RocCurve(self):
+
+		tprs, aucs, i = [], [], 0
+		mean_fpr = np.linspace(0, 1, 100)
+
+		best_params = self.__RandomSearch()
+		cv=StratifiedShuffleSplit(n_splits=10, test_size = .3, random_state = self._random_state)
+		model = SVC(C=best_params["C"], kernel=best_params["kernel"], gamma=best_params["gamma"],probability=True, random_state = self._random_state)
+
+		for train,test in cv.split(self.__sf.values,self._y_train.values):
+			probas_ = model.fit(self.__sf.values[train], self._y_train.values[train]).predict_proba(self.__sf.values[test])
+			# Compute ROC curve and area the curve
+			fpr, tpr, thresholds = roc_curve(self._y_train.values[test], probas_[:, 1])
+			tprs.append(scipy.interp(mean_fpr, fpr, tpr))
+			tprs[-1][0] = 0.0
+			roc_auc = auc(fpr, tpr)
+			aucs.append(roc_auc)
+			plt.plot(fpr, tpr, lw=1, alpha=0.3,
+			label='ROC fold %d (AUC = %0.2f)' % (i, roc_auc))
+			i += 1
+			plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
+			label='Chance', alpha=.8)
+
+		mean_tpr = np.mean(tprs, axis=0)
+		mean_tpr[-1] = 1.0
+		mean_auc = auc(mean_fpr, mean_tpr)
+		std_auc = np.std(aucs)
+		plt.plot(mean_fpr, mean_tpr, color='b',
+		label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),
+		lw=2, alpha=.8)
+
+		std_tpr = np.std(tprs, axis=0)
+		tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
+		tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
+		plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2,
+		     label=r'$\pm$ 1 std. dev.')
+
+		plt.xlim([-0.05, 1.05])
+		plt.ylim([-0.05, 1.05])
+		plt.xlabel('False Positive Rate', fontsize = 18)
+		plt.ylabel('True Positive Rate', fontsize = 18)
+		plt.title('ROC curve', fontsize = 20)
+		plt.legend(loc="lower right")
+		plt.show()
+
 
 	def CheckTest(self):
 
@@ -341,7 +399,6 @@ class CreateModel(TransformDataset):
 		print("Confusion matrix: \n", confusion_matrix(y_test, y_pred))
 		print("report: \n", classification_report(y_test, y_pred))
 
-		# Final_df = pd.DataFrame(X_test_scaled, columns=X_test_scaled.columns.values)
 		# Values = {}
 		# Ranges = {}
 		# for i in range(len(Final_df.columns)):
@@ -353,8 +410,9 @@ class CreateModel(TransformDataset):
 		# 		else:
 		# 			Ranges[i]=1
 
-		# plot_decision_regions(X_test_scaled,np.array(y_test),clf=model,filler_feature_values=Values,filler_feature_ranges=Ranges, legend = 2)
-		# plt.show()
+		pca_test = PCA(n_components=2).fit_transform(X_test_scaled)
+		plot_decision_regions(pca_test,np.array(y_test),clf=model, legend = 2)#filler_feature_values=Values,filler_feature_ranges=Ranges, legend = 2)
+		plt.show()
 
 
 if __name__=="__main__":
@@ -368,5 +426,7 @@ if __name__=="__main__":
 	model = CreateModel(to_drop)
 	if model.train:
 		model.CreateSVCModel()
+	elif model.roc:
+		model.RocCurve()
 	else:
 		model.CheckTest()
