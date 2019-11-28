@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-# Imports 
+# Global imports 
 import os,sys
 import glob
 import argparse as ap
@@ -29,38 +29,39 @@ class Protein():
         return self.__filename
 
     def storePDBfilenames(PDBs_to_parse, parser):
-	    """It identifies the PDB files to add to the ProteinPreparationSystem tool
+        """
+        It identifies the PDB files to add to the ProteinPreparationSystem tool
 
-	    PARAMETERS
-	    ----------
-	    PDBs_to_parse : list of strings
-		               all the PDB files that want to be added to the analysis
+        PARAMETERS
+        ----------
+        PDBs_to_parse : list of strings
+                       all the PDB files that want to be added to the analysis
 
-	    RETURNS
-	    -------
-	    parsed_data : list of PDB filenames (strings)
-	    """
+        RETURNS
+        -------
+        parsed_data : list of PDB filenames (strings)
+        """
 
-	    PDBs = []
+        PDBs = []
 
-	    for PDB_list in PDBs_to_parse:
-		PDB_found = glob.glob(PDB_list)
-		if len(PDB_found) == 0:
-		    print("Warning: path to PDB file \'" +
-		          "{}".format(PDB_list) + "\' not found.")
-		for PDB in PDB_found:
-		    PDBs.append(PDB)
+        for PDB_list in PDBs_to_parse:
+            PDB_found = glob.glob(PDB_list)
+        if len(PDB_found) == 0:
+            print("Warning: path to PDB file \'" +
+                  "{}".format(PDB_list) + "\' not found.")
+        for PDB in PDB_found:
+            PDBs.append(PDB)
 
-	    if len(PDBs) == 0:
-		print("Error: list of PDB files is empty.")
-		parser.print_help()
-		exit(1)
+        if len(PDBs) == 0:
+            print("Error: list of PDB files is empty.")
+            parser.print_help()
+            exit(1)
 
-	    return PDBs
+        return PDBs
 
     def parseArgs(self):
-
-        """Parse arguments from command-line
+        """
+        Parse arguments from command-line
 
         RETURNS
         -------
@@ -68,7 +69,7 @@ class Protein():
                   list of PDB files
         pH : float
                   specific value of the pH of the system
-    	JP : int (0,1)
+        JP : int (0,1)
               Binary value to indicate if HETATM wants to be erased
         """
 
@@ -89,8 +90,8 @@ class Protein():
         return self.__filename,float(self.__pH),self.__JP
 
     def ProteinPreparationSystem(self, file = None):
-
-        """ Take a PDB file and preparate the protein system using prepwizard of Schrodinger utilities.
+        """
+        Take a PDB file and preparate the protein system using prepwizard of Schrodinger utilities.
 
         RETURNS
         -------
@@ -119,8 +120,8 @@ class Protein():
             os.system("mv %s_modified.pdb %s" % (file[:-4], file))
 
     def preparesystem(self):
-
-        """Main function
+        """
+        Main function
 
         It is called when this script is the main program called by the interpreter
         """
@@ -132,7 +133,7 @@ class Protein():
 
 if __name__ == "__main__":
     """Call the main function"""
-	PDB_file = Protein()
-	PDB_file.parseArgs()
-	PDB_file.preparesystem()
+    PDB_file = Protein()
+    PDB_file.parseArgs()
+    PDB_file.preparesystem()
 
