@@ -14,7 +14,7 @@ created directory
 
 # Let's import packages
 import matplotlib
-matplotlib.use("tkagg")
+matplotlib.use("agg")
 import mdtraj as md
 import glob, os, sys, argparse
 import numpy as np
@@ -343,6 +343,7 @@ def parse_args():
     parser.add_argument("-RF","--rmsf",help="Compute the RMSF between one reference and the trajectory",action="store_true")
     parser.add_argument("-LR","--localrmsd",help="Compute the local RMSD between one reference and the trajectory",type=str,nargs='*')
     parser.add_argument("-D","--distance", type=int, help="Two atoms (number) to compute it distance along the trajectory",nargs=2)
+    parser.add_argument("-CD","--catalytic_distance",help="Compute the distance against the catalytic residues",type=str,nargs='*')
     parser.add_argument("-C", "--contact", type=int, help="Two residues (number of residues) to compute its contacts along the trajectory", nargs=2)
     parser.add_argument("-DIS", "--displacement", type=int, help="Atom pair for computing its displacements along the tractory", nargs=2)
     parser.add_argument("-G", "--gyration", help="Compute the gyration at each trajectory frame", action="store_true")
@@ -355,7 +356,7 @@ def parse_args():
 
     args = parser.parse_args()
 
-    return args.traj, args.top, args.rmsd, args.rmsf, args.localrmsd, args.distance, args.contact, args.displacement, args.gyration , args.sasa, \
+    return args.traj, args.top, args.rmsd, args.rmsf, args.localrmsd, args.distance, args.catalytic_distance, args.contact, args.displacement, args.gyration , args.sasa, \
            args.plot_style, args.plot, args.save_plot, args.time, args.acid
 
 
@@ -385,7 +386,7 @@ def main():
         plot_object.box_plot()
         plot_object.density_plot()
 
-    tra, top, rmsd, rmsf, local_rmsd, distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time, acid = parse_args()
+    tra, top, rmsd, rmsf, local_rmsd, distance, catalytic_distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time, acid = parse_args()
 
     xtc = OpenFiles(tra, top)
     number_of_frames = 10000000
@@ -399,7 +400,7 @@ def main():
 
     x_axis  = np.arange(0,number_of_frames,1)*time
     Residue_number = [i for i in range(len(trajectory[0].topology.select("name CA")))]
-
+    
     RMSD, LRMSD, RMSF, Distances, Contacts = [],[],[],[],[]
 
     for traj in trajectory:
@@ -412,7 +413,23 @@ def main():
 
         if local_rmsd is not None:
 
-            LRMSD.append(prop.traj_rmsd(traj,traj.topology.select("resid {}".format(" ".join(local_rmsd)))))
+            #LRMSD.append(prop.traj_rmsd(traj,traj.topology.select("resSeq {} and protein".format(" ".join(local_rmsd)))))
+
+            Res_indices=""
+
+            for elem in local_rmsd:
+                if elem==local_rmsd[0] and len(local_rmsd)==1:
+                    Res_indices+="(resSeq {})".format(elem)
+                elif elem==local_rmsd[0] and len(local_rmsd)==2:
+                    Res_indices+="(resSeq {} or ".format(elem)
+                elif elem==local_rmsd[0]:
+                    Res_indices+="(resSeq {}".format(elem)
+                elif elem==local_rmsd[len(local_rmsd)-1]:
+                    Res_indices+="resSeq {})".format(elem)
+                else:
+                    Res_indices+=" or resSeq {} or ".format(elem)
+
+            LRMSD.append(prop.traj_rmsd(traj,traj.topology.select(Res_indices+" and protein")))
 
         if rmsf:
 
@@ -430,6 +447,24 @@ def main():
             
             else:
                 Distances.append(prop.compute_distance([distance]))
+        
+        if catalytic_distance is not None:
+
+            if acid:
+                Asp_index_1=int(traj.topology.select("resSeq {} and name OD1 and protein".format(catalytic_distance[2])))
+                Asp_index_2=int(traj.topology.select("resSeq {} and name OD2 and protein".format(catalytic_distance[2])))
+                His_index=int(traj.topology.select("resSeq {} and name HD1 and protein".format(catalytic_distance[1])))
+                D1 = prop.compute_distance([Asp_index_1,His_index])
+                D2 = prop.compute_distance([Asp_index_2,His_index])
+                distances = []
+                for i in range(len(D1)):
+                    distances.append(min(D1[i],D2[i]))
+                Distances.append(np.array(distances))
+
+            else:
+                Ser_index=int(traj.topology.select("resSeq {} and name HG and protein".format(catalytic_distance[0])))
+                His_index=int(traj.topology.select("resSeq {} and name NE2 and protein".format(catalytic_distance[1])))
+                Distances.append(prop.compute_distance([[Ser_index,His_index]]))
 
         if contact is not None:
 
@@ -438,10 +473,12 @@ def main():
 
     if rmsd:
         RMSD = average_property(RMSD)
+        print("RMSD: "+str(RMSD.mean())+"(+-)"+str(RMSD.std())+"\n")
         execute_plots(x_axis,RMSD,"Time (ns)","RMSD (nm)",title = "Global RMSD of the MD simulation",figure_name = "RMSD")
 
     if local_rmsd is not None:
         LRMSD = average_property(LRMSD)
+        print("Local RMSD: "+str(LRMSD.mean())+"(+-)"+str(LRMSD.std())+"\n")
         execute_plots(x_axis,LRMSD,"Time (ns)","RMSD (nm)",title = "Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd)), figure_name = "LocalRMSD_{}".format("_".join(local_rmsd)))
 
     if rmsf:
@@ -450,7 +487,16 @@ def main():
 
     if distance is not None:
         Distances = average_property(Distances)
+        print("Distance: "+str(Distances.mean())+"(+-)"+str(Distances.std())+"\n")
         execute_plots(x_axis,Distances,"Time (ns)","Distance ($\AA$)",title = "Distance of the MD simulation between atoms {}".format(" and ".join(str(index) for index in distance)),figure_name = "distance_{}".format("_".join(str(index) for index in distance)))
+
+    if catalytic_distance is not None:
+        Distances = average_property(Distances)
+        print("Distance: "+str(Distances.mean())+"(+-)"+str(Distances.std())+"\n")
+        if acid:
+            execute_plots(x_axis,Distances,"Time (ns)","Distance ($\AA$)",title = "Acid-His catalytic distance of the MD simulation",figure_name = "distance_{}".format("_".join(str(index) for index in catalytic_distance[1:3])))
+        else:
+            execute_plots(x_axis,Distances,"Time (ns)","Distance ($\AA$)",title = "Ser-His catalytic distance of the MD simulation",figure_name = "distance_{}".format("_".join(str(index) for index in catalytic_distance[0:2])))
 
     if contact is not None:
         Contacts = average_property(Contacts)
