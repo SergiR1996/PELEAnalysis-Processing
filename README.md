@@ -16,7 +16,7 @@ A set of Python libraries are necessary to run the scripts of this Git repositor
 
 * <b> Esterases </b>: Folder where tools concerning esterases, esters, and others can be found.
 
-* <b> MD\_analysis </b>: Folder where the analyse\_trajectory python script resides.
+* <b> MD\_analysis </b>: Folder where the analyse\_trajectory and ClusterizeAtoms python scripts reside (used for calculate RMSD, distances, contacts, cluster of average position of atoms, and more).
 
 * <b> ML\_scripts </b>: Folder with scripts to perform [SVC](https://en.wikipedia.org/wiki/Support-vector_machine) on a given dataset.
 
