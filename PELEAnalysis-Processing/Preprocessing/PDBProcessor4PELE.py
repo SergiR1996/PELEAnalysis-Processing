@@ -2,7 +2,7 @@
 
 # Global imports
 import os,re
-import glob
+import glob,gtk
 import argparse as ap
 
 # Script information
@@ -92,6 +92,8 @@ def PDB_processing(PDB_filename, Output):
     PDB modified file
     """
 
+    Non_aminoacid_dict, L_number = {},0
+
     # Depending on if a output filename is specified on the command line or not, the writable files will be different.
     if Output != "":
         PDB_original, PDB_modified = open("{}".format(PDB_filename),"rt"), open("{}.pdb".format(Output),"wt")
@@ -106,14 +108,14 @@ def PDB_processing(PDB_filename, Output):
     while i < len(Lines):
 
         line = Lines[i]
-        if line.find("TER") != -1 or line.find("END") != -1: # Preserve the TER or END lines
+        if (line[0:3] == "TER" != -1 or line[0:3] == "END"): # Preserve the TER or END lines
             PDB_modified.write("TER\n")
 
         elif line.find("CONECT") != -1: # If CONECT is found in the line, it means the rest of the file is useless for PELE.
             PDB_modified.write("TER\n")
             break
 
-        elif line.find("ATOM") != -1 or line.find("HETATM") != -1: # These conditional statements control the TER between molecules and also the remaining coordinate lines.
+        elif (line[0:4] == "ATOM"  or line[0:6] == "HETATM"): # These conditional statements control the TER between molecules and also the remaining coordinate lines.
 
             if (line.strip()[21:22] != Lines[i+1].strip()[21:22]) and (line.strip()[21:22] != "" and Lines[i+1].strip()[21:22] != ""):
                 PDB_modified.write(line+"TER\n")
@@ -128,7 +130,19 @@ def PDB_processing(PDB_filename, Output):
             else:
 
                 if line.strip()[17:20] not in Protein_list:
-                    PDB_modified.write(line[0:21]+"L   1"+line[26:])
+                    if line.strip()[17:20] not in Non_aminoacid_dict:
+                        Non_aminoacid_dict[line.strip()[17:20]] = 1
+                        L_number+=1
+                        if Lines[i-1][0:3]!="TER":
+                            PDB_modified.write("TER\n")
+                        PDB_modified.write(line[0:21]+"L{:>4}".format(L_number)+line[26:])
+                    elif line.strip()[17:20] != Lines[i-1].strip()[17:20]:
+                        Non_aminoacid_dict[line.strip()[17:20]] += 1
+                        L_number+=1
+                        PDB_modified.write("TER\n")
+                        PDB_modified.write(line[0:21]+"L{:>4}".format(L_number)+line[26:])
+                    else:
+                        PDB_modified.write(line[0:21]+"L{:>4}".format(L_number)+line[26:])
                     i += 1 
                     continue
                 if line.strip()[17:20] =="HOH" and Lines[i-1].strip()[17:20] not in Protein_list:
@@ -148,15 +162,31 @@ def PDB_processing(PDB_filename, Output):
 
     PDB_modified.close()
     PDB_original.close()
+
+    return water_i, Non_aminoacid_dict
+
+def Printing_summary(PDB_filename, Output, water_i, Non_aminoacid_dict):
+
+    Screen_ticks = (gtk.gdk.screen_width()/100)
     
     # Depending on if a output filename is specified on the command line or not, the input PDB file will be preserved or overwritten.
     if Output != "":
-        print("{} has been succesfully processed and written to {}.pdb" .format((PDB_filename, Output)))
+        print("\n{} has been succesfully processed and written to {}.pdb\n\n".format(PDB_filename, Output) + "-"*Screen_ticks + "SUMMARY" + "-"*Screen_ticks)
+        print("\n{} water molecules were found in the PDB file" .format(water_i))
+        if Non_aminoacid_dict != {}:
+            print("\nThe following ligands and cofactors were found in the PDB file\n")
+            for ligand in Non_aminoacid_dict.keys():
+                print(ligand + ": " + str(Non_aminoacid_dict[ligand]) + " molecule/s\n")
 
     else:
         os.system("rm {}" .format(PDB_filename))
-        os.system("mv {}_modified.pdb {}" .format((PDB_filename[:-4], PDB_filename)))
-        print("{} has been succesfully processed and overwritten" .format(PDB_filename))
+        os.system("mv {}_modified.pdb {}" .format(PDB_filename[:-4], PDB_filename))
+        print("\n{} has been succesfully processed and overwritten\n\n" .format(PDB_filename) + "-"*Screen_ticks + "SUMMARY" + "-"*Screen_ticks)
+        print("\n{} water molecules were found in the PDB file" .format(water_i))
+        if Non_aminoacid_dict != {}:
+            print("\nThe following ligands and cofactors were found in the PDB file\n")
+            for ligand in Non_aminoacid_dict.keys():
+                print(ligand + ": " + str(Non_aminoacid_dict[ligand]) + " molecule/s\n")
 
 
 
@@ -170,7 +200,8 @@ def main():
     PDBs, Output = parseArgs()
 
     for PDB_filename in PDBs:
-        PDB_processing(PDB_filename, Output)
+        water_i, Non_aminoacid_dict = PDB_processing(PDB_filename, Output)
+        Printing_summary(PDB_filename, Output, water_i, Non_aminoacid_dict)
 
 if __name__ == "__main__":
     """Call the main function"""
