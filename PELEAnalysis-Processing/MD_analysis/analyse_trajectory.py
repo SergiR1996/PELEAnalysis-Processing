@@ -23,7 +23,7 @@ def parseArgs():
 
     parser = ap.ArgumentParser()
 
-    parser.add_argument("traj", type=str, help="Trajectory", nargs = '*')
+    parser.add_argument("traj", type=str, help="Trajectory file/s", nargs = '*')
     parser.add_argument("top", type=str, help="Topology file")
     parser.add_argument("-I", "--info", help="Save informfation of trajectory in file", action="store_true")
     parser.add_argument("-R","--rmsd",help="Compute the RMSD between one reference and the trajectory",action="store_true")
@@ -40,11 +40,12 @@ def parseArgs():
     parser.add_argument("-SP", "--save_plot", help="Save plots in directory", action="store_true")
     parser.add_argument("-T","--time", help="Conversion factor from frames to time-scale", type=float, default=1)
     parser.add_argument("-AC", "--acid", help="Take into account for Acid-His distance", action="store_true")
+    parser.add_argument("-PN", "--pickle_name", help="name of the stored pickle name", type=str, default="")
 
     args = parser.parse_args()
 
     return args.traj, args.top, args.rmsd, args.rmsf, args.localrmsd, args.distance, args.catalytic_distance, args.contact, args.displacement, args.gyration , args.sasa, \
-           args.plot_style, args.plot, args.save_plot, args.time, args.acid
+           args.plot_style, args.plot, args.save_plot, args.time, args.acid, args.pickle_name
 
 
 
@@ -63,13 +64,18 @@ def main():
 
         return np.average(new_prop, axis=0)
 
+    def save_pickle(pickle_name, property_name, property_y, property_x):
+        if pickle_name != "":
+            inf = open("{}_{}.pkl".format(property_name, pickle_name), "wb")
+            pickle.dump(property_y, inf); pickle.dump(property_x, inf); inf.close()
+
     def execute_plots(x_axis,y_axis,xlabel,ylabel,title = "", figure_name="Plot"):
         plot_object = Plotter(x_axis, y_axis, x_label = xlabel, y_label = ylabel, title = title, figure_name = figure_name, plot=plot, save=save_plot)
         plot_object.scatter_plot()
         plot_object.box_plot()
         plot_object.density_plot()
 
-    tra, top, rmsd, rmsf, local_rmsd, distance, catalytic_distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time, acid = parseArgs()
+    tra, top, rmsd, rmsf, local_rmsd, distance, catalytic_distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time, acid, pickle_name = parseArgs()
 
     traj = OpenFiles(tra, top)
     number_of_frames = 10000000
@@ -138,8 +144,8 @@ def main():
                 Asp_index_1=int(traj.topology.select("resSeq {} and name OD1 and protein".format(catalytic_distance[2])))
                 Asp_index_2=int(traj.topology.select("resSeq {} and name OD2 and protein".format(catalytic_distance[2])))
                 His_index=int(traj.topology.select("resSeq {} and name HD1 and protein".format(catalytic_distance[1])))
-                D1 = prop.compute_distance([Asp_index_1,His_index])
-                D2 = prop.compute_distance([Asp_index_2,His_index])
+                D1 = prop.compute_distance([[Asp_index_1,His_index]])
+                D2 = prop.compute_distance([[Asp_index_2,His_index]])
                 distances = []
                 for i in range(len(D1)):
                     distances.append(min(D1[i],D2[i]))
@@ -158,25 +164,30 @@ def main():
     if rmsd:
         RMSD = average_property(RMSD)
         print("RMSD: "+str(RMSD.mean())+"(+-)"+str(RMSD.std())+"\n")
+        save_pickle(pickle_name, "RMSD", RMSD, x_axis)
         execute_plots(x_axis,RMSD,"Time (ns)","RMSD (nm)",title = "Global RMSD of the MD simulation",figure_name = "RMSD")
 
     if local_rmsd is not None:
         LRMSD = average_property(LRMSD)
         print("Local RMSD: "+str(LRMSD.mean())+"(+-)"+str(LRMSD.std())+"\n")
+        save_pickle(pickle_name, "LRMSD", LRMSD, x_axis)
         execute_plots(x_axis,LRMSD,"Time (ns)","RMSD (nm)",title = "Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd)), figure_name = "LocalRMSD_{}".format("_".join(local_rmsd)))
 
     if rmsf:
         RMSF = average_property(RMSF)
+        save_pickle(pickle_name, "RMSF", RMSF, Residue_number)
         execute_plots(Residue_number,RMSF,"Residue number","RMSF (nm)",title = "RMSF of the MD simulation",figure_name = "RMSF")
 
     if distance is not None:
         Distances = average_property(Distances)
         print("Distance: "+str(Distances.mean())+"(+-)"+str(Distances.std())+"\n")
+        save_pickle(pickle_name, "Distance", Distances, x_axis)
         execute_plots(x_axis,Distances,"Time (ns)","Distance ($\AA$)",title = "Distance of the MD simulation between atoms {}".format(" and ".join(str(index) for index in distance)),figure_name = "distance_{}".format("_".join(str(index) for index in distance)))
 
     if catalytic_distance is not None:
         Distances = average_property(Distances)
         print("Distance: "+str(Distances.mean())+"(+-)"+str(Distances.std())+"\n")
+        save_pickle(pickle_name, "Catalytic_distance", Distances, x_axis)
         if acid:
             execute_plots(x_axis,Distances,"Time (ns)","Distance ($\AA$)",title = "Acid-His catalytic distance of the MD simulation",figure_name = "distance_{}".format("_".join(str(index) for index in catalytic_distance[1:3])))
         else:
@@ -184,18 +195,10 @@ def main():
 
     if contact is not None:
         Contacts = average_property(Contacts)
+        save_pickle(pickle_name, "Contact", Contacts, x_axis)
         execute_plots(x_axis,Contacts,"Time (ns)","Distance ($\AA$)",title = "Distance of the MD simulation between residues {}".format(" and ".join(str(index) for index in contact)),figure_name = "contact_{}".format("_".join(str(index) for index in contact)))
-
 
 
 
 if __name__=="__main__":
     main()
-
-
-
-
-
-
-
-

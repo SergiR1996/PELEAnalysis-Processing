@@ -37,7 +37,8 @@ def parseArgs():
     """
 
     parser = ap.ArgumentParser(description='Script that returns a csv file with the mean of the numerical \
-        metrics of the reports file from a PELE simulation')
+        metrics of the reports file from a PELE simulation. It also can return the number of catalytic catalytic events \
+        and catalytic trajectories in the PELE simulation.')
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
     required.add_argument("-i", "--input", required=True, metavar="FILE",

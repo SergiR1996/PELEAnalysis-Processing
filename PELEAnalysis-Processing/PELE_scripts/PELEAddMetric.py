@@ -69,6 +69,7 @@ def AddMetric(out_directory, residue, metric, column_name, report_format, trajec
     trajectory_list = glob.glob(os.path.join(out_directory,trajectory_format))
     report_list = glob.glob(os.path.join(out_directory,report_format))
     report_list.sort()
+    trajectory_list.sort()
     metric_list = []
 
     for trajectory in trajectory_list:
