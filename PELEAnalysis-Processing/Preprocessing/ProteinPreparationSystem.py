@@ -18,11 +18,12 @@ __email__="sergi.rodallordes@bsc.es"
 
 class Protein():
 
-    def __init__(self,filename = "",pH = 7.0,JP = 0):
+    def __init__(self,filename = "",pH = 7.0,JP = 0, output = ""):
 
         self.__filename = filename
         self.__pH = pH
         self.__JP = JP
+        self.__output = output
 
     @property
     def filename(self):
@@ -75,17 +76,21 @@ class Protein():
 
         parser = ap.ArgumentParser(description="Script used to prepare PDB files with prepwizard")
         required = parser.add_argument_group('required arguments')
+        optional = parser._action_groups.pop()
         required.add_argument("-i","--input",required=True,metavar="STRING",
                                 type=str,nargs="*",help="Location of input and output files")
         required.add_argument("-H","--pH",required=True,metavar="FLOAT",
                               type=float,nargs="*",help="pH of the system")
         required.add_argument("-JP","--justprotein",required=True,metavar="INTEGER",
                           type=int,nargs="*",help="Use the protein or all atoms",default=0)
+        optional.add_argument("-O","--output",required=True,metavar="STRING",
+                          type=str,nargs="*",help="Output filename",default=0)
         args = parser.parse_args()
 
         self.__filename = storePDBfilenames(args.input,parser)
         self.__pH = args.pH[0]
         self.__JP = args.justprotein
+        self.__output = args.output
 
         return self.__filename,float(self.__pH),self.__JP
 
@@ -104,7 +109,8 @@ class Protein():
             file,self.__pH,self.__pH))
 
         if self.__JP==0: # Preprocess as usual.
-            PPP.PDB_processing(file)
+            water_i, Non_aminoacid_dict = PPP.PDB_processing(file, self.__output)
+            PPP.Printing_summary(file, self.__output, water_i, Non_aminoacid_dict)
 
         if self.__JP==1: # If just the protein is wanted, execute this part of the code.
             PDB_original, PDB_modified = open("%s" % file, "rt"), open("%s_modified.pdb" % file[:-4], "wt")

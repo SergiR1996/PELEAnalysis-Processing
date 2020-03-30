@@ -65,8 +65,8 @@ class BindingSiteIsolator(object):
 		coords = []
 
 		for line in self.__lines:
-			if ("ATOM" in line):
-				if int(line.split()[5]) in self.__resid:
+			if (line[0:4] == "ATOM"  or line[0:6] == "HETATM"):
+				if int(line[22:26].strip()) in self.__resid:
 					x = float(line[30:38].strip())
 					y = float(line[38:46].strip())
 					z = float(line[46:54].strip())
@@ -79,7 +79,7 @@ class BindingSiteIsolator(object):
 
 	def GetNeighboringAtoms(self,coords):
 		"""
-		This method finds the neighbouring residues around the centroid of the coordinates
+		This method finds the neighboring residues around the centroid of the coordinates
 		found in the GetBindingSiteCoordinates method according to a specified radius in 
 		the BindingSiteIsolator class
 
@@ -100,12 +100,12 @@ class BindingSiteIsolator(object):
 
 		neighboring_residues = []
 		for line in self.__lines:
-			if ("ATOM" in line): # and (line[12:16].strip() == "CA"):
+			if (line[0:4] == "ATOM"  or line[0:6] == "HETATM"):
 				x = float(line[30:38].strip())
 				y = float(line[38:46].strip())
 				z = float(line[46:54].strip())
-				resid_name = line[17:20]
-				resid_num = line[22:26]
+				resid_name = line[17:20].strip()
+				resid_num = line[22:26].strip()
 				atom_coords = [x,y,z]
 				if ComputeDistance(atom_coords, [coords[0],coords[1],coords[2]]) <= self.__radius:
 					residue = [str(resid_name), int(resid_num)]
@@ -127,13 +127,13 @@ class BindingSiteIsolator(object):
 		output = open("{}_binding_site.pdb".format(self.__filename[:-4]), "w")
 
 		for line in self.__lines:
-			if "ATOM" in line:
-				if int(line.split()[5]) in self.__resid:
+			if (line[0:4] == "ATOM"  or line[0:6] == "HETATM"):
+				if int(line[22:26].strip()) in self.__resid:
 					output.write(line)
 
 	def CreateBindingPDBFile(self,neighboring_residues):
 		"""
-		This method outputs a PDB file with the neighbouring residues found in the 
+		This method outputs a PDB file with the neighboring residues found in the 
 		GetNeighboringAtoms method
 
 		PARAMETERS
@@ -148,7 +148,7 @@ class BindingSiteIsolator(object):
 		output = open("{}_binding_site.pdb".format(self.__filename[:-4]), "w")
 
 		for line in self.__lines:
-			if "ATOM" in line:
+			if (line[0:4] == "ATOM"  or line[0:6] == "HETATM"):
 				resid = line[17:20].strip()
 				number = line[22:26].strip()
 				for elem in neighboring_residues:

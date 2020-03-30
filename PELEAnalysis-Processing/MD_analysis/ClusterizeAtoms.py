@@ -28,7 +28,7 @@ def parseArgs():
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
     parser.add_argument("traj", metavar="FILE",
-                          type=str, help="path to trajectory file")
+                          type=str, help="path to trajectory file", nargs = '*')
     parser.add_argument("top", metavar="FILE",
                           type=str, help="path to topology file")
     required.add_argument("-R", "--reference", required=True, metavar="FILE",
@@ -38,9 +38,9 @@ def parseArgs():
     optional.add_argument("-CW", "--cluster_width", metavar="FLOAT",
                           type=float, help="cluster width in $\AA$", default = 1.5)
     optional.add_argument("-RW", "--ref_atoms", metavar="LIST",
-                          type=str,nargs='*', help="the reference atoms",default = 2)
+                          type=str,nargs='*', help="the residue number of the reference atoms",default = 2)
     optional.add_argument("-SW", "--sim_atoms", metavar="LIST",
-                          type=str,nargs='*', help="the simulation atoms", default = 2)
+                          type=str,nargs='*', help="the residue number of the simulation atoms", default = 2)
     optional.add_argument("-AN","--atom_name", metavar="STRING",
     					  type=str, help="the PDB atom name of the reference PDB file", default = "_CA_")
     optional.add_argument("-o","--output", metavar="PATH", type=str,help="filename of the output file", default="centroid")
@@ -68,10 +68,10 @@ def GetCoordinates(file,atom_ref_ids, atom_name):
 	PDB = open(file)
 	res_coord = []
 	for line in PDB:
-		if (line.strip()[0:4] == "ATOM") and (line.strip()[12:16].replace(" ","_") == atom_name) and (line.strip()[22:26].replace(" ","") in atom_ref_ids):
-			x = float(line.strip()[30:38])
-			y = float(line.strip()[38:46])
-			z = float(line.strip()[46:54])
+		if (line[0:4] == "ATOM") and (line[12:16].replace(" ","_") == atom_name) and (line[22:26].strip() in atom_ref_ids):
+			x = float(line[30:38].strip())
+			y = float(line[38:46].strip())
+			z = float(line[46:54].strip())
 			res_coord.append([x,y,z])
 
 	return res_coord
@@ -94,7 +94,10 @@ def ClusterizeAtoms(traj,top,reference,atom_sim_ids,atom_ref_ids, cluster_width,
 
 	# Open trajectory file with topology and extract interesting atom coordinates
 	traj_aux = OpenFiles(traj, top)
-	trajectory = traj_aux.load_trajectory()
+	if ".xtc" in traj[0]:
+		trajectory = traj_aux.load_xtc()
+	else:
+		trajectory = traj_aux.load_trajectory()
 
 	Atom_indices = ""
 	for elem in atom_sim_ids:
@@ -109,10 +112,10 @@ def ClusterizeAtoms(traj,top,reference,atom_sim_ids,atom_ref_ids, cluster_width,
 		else:
 			Atom_indices+=" or resSeq {} or ".format(elem)
 
-	Atoms = trajectory.topology.select("name %s and %s" %(atom_name.strip("_"),Atom_indices))
+	Atoms = trajectory[0].topology.select("name %s and %s" %(atom_name.strip("_"),Atom_indices))
 	Atom_coordinates = []
 	for elem in Atoms:
-		for model in trajectory.xyz[:,elem,:]:
+		for model in trajectory[0].xyz[:,elem,:]:
 			Atom_coordinates.append(model*10) # The multiplier by 10 is to convert to Angstrom units.
 
 	# Retrieve reference data for cluster analysis
