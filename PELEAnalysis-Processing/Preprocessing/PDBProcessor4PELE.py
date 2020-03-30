@@ -117,7 +117,7 @@ def PDB_processing(PDB_filename, Output):
 
         elif (line[0:4] == "ATOM"  or line[0:6] == "HETATM"): # These conditional statements control the TER between molecules and also the remaining coordinate lines.
 
-            if (line.strip()[21:22] != Lines[i+1].strip()[21:22]) and (line.strip()[21:22] != "" and Lines[i+1].strip()[21:22] != ""):
+            if (line[21:22].strip() != Lines[i+1][21:22].strip()) and (line[21:22].strip() != "" and Lines[i+1][21:22].strip() != ""):
                 PDB_modified.write(line+"TER\n")
                 i += 1
                 continue
@@ -129,14 +129,14 @@ def PDB_processing(PDB_filename, Output):
                 water_i += 1; water_j = 0
             else:
 
-                if line.strip()[17:20] not in Protein_list:
-                    if line.strip()[17:20] not in Non_aminoacid_dict:
-                        Non_aminoacid_dict[line.strip()[17:20]] = 1
+                if line[17:20].strip() not in Protein_list:
+                    if line[17:20].strip() not in Non_aminoacid_dict:
+                        Non_aminoacid_dict[line[17:20].strip()] = 1
                         L_number+=1
                         if Lines[i-1][0:3]!="TER":
                             PDB_modified.write("TER\n")
                         PDB_modified.write(line[0:21]+"L{:>4}".format(L_number)+line[26:])
-                    elif line.strip()[17:20] != Lines[i-1].strip()[17:20]:
+                    elif line[17:20].strip() != Lines[i-1][17:20].strip():
                         Non_aminoacid_dict[line.strip()[17:20]] += 1
                         L_number+=1
                         PDB_modified.write("TER\n")
@@ -145,13 +145,13 @@ def PDB_processing(PDB_filename, Output):
                         PDB_modified.write(line[0:21]+"L{:>4}".format(L_number)+line[26:])
                     i += 1 
                     continue
-                if line.strip()[17:20] =="HOH" and Lines[i-1].strip()[17:20] not in Protein_list:
+                if line[17:20].strip() =="HOH" and Lines[i-1][17:20].strip() not in Protein_list:
                     PDB_modified.write("TER\n"+line[0:12]+" OW  HOH W{:>4}".format(water_i)+line[26:])
                     water_j += 1
-                elif line.strip()[17:20] =="HOH" and water_j == 0:
+                elif line[17:20].strip() =="HOH" and water_j == 0:
                     PDB_modified.write(line[0:12]+" OW  HOH W{:>4}".format(water_i)+line[26:])
                     water_j += 1
-                elif line.strip()[17:20] =="HOH" and water_j == 1:
+                elif line[17:20].strip() =="HOH" and water_j == 1:
                     PDB_modified.write(line[0:12]+"1HW  HOH W{:>4}".format(water_i)+line[26:])
                 else:
                     PDB_modified.write(line)

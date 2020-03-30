@@ -26,7 +26,7 @@ class MutateScore():
 		Parse arguments from command-line
 		"""
 
-		parser = ap.ArgumentParser(description='Script used to compute the local RMSD od the specified \
+		parser = ap.ArgumentParser(description='Script used to compute the local RMSD of the specified \
 			residues of a reference PDB file against all the residues of a target PDB file')
 		optional = parser._action_groups.pop()
 		required = parser.add_argument_group('required arguments')
@@ -35,7 +35,8 @@ class MutateScore():
 		required.add_argument("-r","--residues",required=True,metavar="STRING",
 								type=int,nargs='*',help="reference residue indices")
 		optional.add_argument("-AT","--Atom_types",metavar="STRING",type=str,nargs='*',
-			help="Atom types for the RMSD calculation",default=["CA","N","O"])
+			help="Atom types for the RMSD calculation. They must be indicated \
+			with underscore referring to spaces",default=["_CA_","_N__","_O__"])
 		optional.add_argument("-O","--output",metavar="STRING",type=str,
 			help="Output filename",default="scores.txt")
 		parser._action_groups.append(optional)
@@ -80,25 +81,17 @@ class MutateScore():
 		PDB = open(file)
 		coordinates,res_coord,aux_coord,counter = [],[],[],0
 		for line in PDB:
-			if (line.split()[0] == "ATOM") and (line.split()[2] in self.__Atom_types):
+			if (line[0:4] == "ATOM"  or line[0:6] == "HETATM") and (line[12:16].replace(" ","_") in self.__Atom_types):
 				if ref_coord:
-					if int(line.split()[5]) in self.__ref_residues_indices:
-						x = float(line.split()[6])
-						y = float(line.split()[7])
-						z = float(line.split()[8])
-						# res_name = line.split()[2]+"_"+line.split()[3]+"_"+line.split()[5]
-						# coordinates.append([x,y,z])
+					if int(line[22:26].strip()) in self.__ref_residues_indices:
+						x = float(line[30:38].strip())
+						y = float(line[38:46].strip())
+						z = float(line[46:54].strip())
 						res_coord.append([x,y,z])
-						# counter +=1
-						# if counter%3 == 0:
-						# 	res_coord.append(aux_coord)
-						# 	aux_coord = []
 				else:
-					x = float(line.split()[6])
-					y = float(line.split()[7])
-					z = float(line.split()[8])
-					# res_name = line.split()[2]+"_"+line.split()[3]+"_"+line.split()[5]
-					# coordinates.append([x,y,z])
+					x = float(line[30:38].strip())
+					y = float(line[38:46].strip())
+					z = float(line[46:54].strip())
 					aux_coord.append([x,y,z])
 					counter +=1
 					if counter%len(self.__Atom_types) == 0:
@@ -227,7 +220,7 @@ class MutateScore():
 
 	def FindResidues(self,file,coordinates):
 		"""
-		This method finds  the residues that are contained in 
+		This method finds the residues that are contained in 
 		the coordinates of the specified atoms.
 
 		PARAMETERS
@@ -259,23 +252,22 @@ class MutateScore():
 	        A: string
 	        		The string of the coodinates with 3 decimals	
 			"""
-
 			A = str(round(number,3))
 			while len(A.split(".")[1]) < 3:
 				A+="0"
 
 			return A
 
-		Residues,res_index,val = [],[],0
+		Residues,res_index = [],[]
 		PDB = open(file)
 		lines = PDB.readlines();PDB.close()
 		for i in range(len(coordinates)):
 			for line in lines:
-				if (line.split()[0] == "ATOM") and (line.split()[2] in self.__Atom_types):
+				if (line[0:4] == "ATOM"  or line[0:6] == "HETATM") and (line[12:16].replace(" ","_") in self.__Atom_types):
 					x,y,z = RoundFloat(coordinates[i][0][0]),RoundFloat(coordinates[i][0][1]),RoundFloat(coordinates[i][0][2])
-					if (line.split()[6] == x) and (line.split()[7] == y) and (line.split()[8] == z):
-						if line.split()[5] not in res_index:
-							Residues.append(line.split()[3]+"_"+line.split()[5]+" ")
+					if (line[30:38].strip() == x) and (line[38:46].strip() == y) and (line[46:54].strip() == z):
+						if line[22:26].strip() not in res_index:
+							Residues.append(line[17:20].strip()+"_"+line[22:26].strip()+" ")
 
 		return "".join(Residues)
 
@@ -307,7 +299,7 @@ class MutateScore():
 			RMSD = self.RMSD(ref_coordinates,final_coordinates)
 			Aux = [RMSD,self.FindResidues(self.__filename,permutation)]
 			if Aux[0] < 1.0:
-			 	print(Aux+"\n")
+			 	print(Aux)
 			results.append(Aux)
 
 		return results
@@ -323,11 +315,11 @@ class MutateScore():
 		results = []
 
 		start = time.time()
-		print("RMSD of all combinations is starting to be computed \n")
+		print("\nRMSD of all combinations is starting to be computed \n")
 
 		pool = mp.Pool(6)
 		results.append(pool.map(
-			A.ComputeScore,itertools.combinations(A.GetCoordinates(A.filename),len(A.ref_residues_indices))))
+			self.ComputeScore,itertools.combinations(self.GetCoordinates(self.filename),len(self.ref_residues_indices))))
 		pool.terminate()
 
 		results = self.DecompressList(self.DecompressList((results)))
@@ -338,7 +330,7 @@ class MutateScore():
 			output.write("\nRMSD: {}".format(elem[0])+" // Residues: {} \n".format(elem[1]))
 
 		end = time.time()
-		print("The main code needed {} seconds to compute all scores for all the combinations \n".format(end-start))
+		print("\nThe main code needed {} seconds to compute all scores for all the combinations \n".format(end-start))
 
 
 if __name__=="__main__":

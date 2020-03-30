@@ -32,8 +32,11 @@ class OpenFiles:
 
 		trajectories = []
 
-		for traj in self.traj_file:
-			trajectories.append(md.load_xtc(traj, self.top_file))
+		if len(self.traj_file)!=0:
+			for traj in self.traj_file:
+				trajectories.append(md.load_xtc(traj, self.top_file))
+		else:
+			trajectories.append(md.load_xtc(self.traj_file, self.top_file))
 
 		return trajectories
 

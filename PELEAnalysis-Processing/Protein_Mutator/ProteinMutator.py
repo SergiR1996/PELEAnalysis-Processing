@@ -31,11 +31,12 @@ class ProteinMutator():
         return self.__filename
 
     def get_residue_atoms(self,index):
+        
         PDB = open(self.__filename)
         for line in PDB:
-	    if "ATOM" in line:
-            	if self.__mutated_residues[index] == int(line.split()[5]):
-                	return int(line.split()[1])
+            if (line[0:4] == "ATOM"):
+                if self.__mutated_residues[index] == int(line[22:26].strip()):
+                    return int(line[6:11].strip())
 
     def apply_mutation(self,index,final_residue):
         """
