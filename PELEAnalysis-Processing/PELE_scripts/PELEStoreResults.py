@@ -162,7 +162,8 @@ def Storeresults(reports,catalytic_event, output_path, to_drop):
                 
 
 def main():
-    """Main function
+    """
+    Main function
 
     It is called when this script is the main program called by the interpreter
     """

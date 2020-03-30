@@ -93,7 +93,8 @@ def CalculateFreeEnergy(reports,output_path,metric,threshold):
     df.to_csv(output_path+".csv")
 
 def main():
-    """Main function
+    """
+    Main function
 
     It is called when this script is the main program called by the interpreter
     """

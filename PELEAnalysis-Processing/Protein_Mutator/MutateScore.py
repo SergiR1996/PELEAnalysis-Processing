@@ -66,16 +66,16 @@ class MutateScore():
 		not according to a boolean value.
 
 		PARAMETERS
-        ----------
-        file : string
-                PDB filename
-        ref_coord: bool
-        		Boolean value to indicate whether they are
-        		reference residues or not
+		----------
+		file : string
+				PDB filename
+		ref_coord: bool
+				Boolean value to indicate whether they are
+				reference residues or not
 
-        RETURNS
-        ------
-        res_coord: list of floats
+		RETURNS
+		------
+		res_coord: list of floats
 		"""
 
 		PDB = open(file)
@@ -106,16 +106,16 @@ class MutateScore():
 		the target coordinates against the reference coordinates.
 
 		PARAMETERS
-        ----------
-        ref_coordinates : array of floats
-                Coordinates of the reference atoms
-        coordinates: array of floats
-        		Coordinates of the target atoms
+		----------
+		ref_coordinates : array of floats
+				Coordinates of the reference atoms
+		coordinates: array of floats
+				Coordinates of the target atoms
 
-        RETURNS
-        ------
-        rmsd: float
-        		Value of the RMSD
+		RETURNS
+		------
+		rmsd: float
+				Value of the RMSD
 		"""
 
 		D,N,RMS = len(ref_coordinates[0]),len(ref_coordinates),0.0
@@ -132,14 +132,14 @@ class MutateScore():
 		coordinates.
 
 		PARAMETERS
-        ----------
-        coordinates: array of floats
-        		Coordinates of the atoms
+		----------
+		coordinates: array of floats
+				Coordinates of the atoms
 
-        RETURNS
-        ------
-        centered_coordinates: array of floats
-        		Centered coordinates of the atoms
+		RETURNS
+		------
+		centered_coordinates: array of floats
+				Centered coordinates of the atoms
 		"""
 
 		centered_coordinates = []
@@ -176,16 +176,16 @@ class MutateScore():
 		reference coordinates.
 
 		PARAMETERS
-        ----------
-        coordinates: array of floats
-        		Coordinates of the target atoms
-        ref_coordinates: array of floats
-        		Coordinates of the reference atoms
+		----------
+		coordinates: array of floats
+				Coordinates of the target atoms
+		ref_coordinates: array of floats
+				Coordinates of the reference atoms
 
-        RETURNS
-        ------
-        coordinates: array of floats
-        		Rotated coordinates of the atoms
+		RETURNS
+		------
+		coordinates: array of floats
+				Rotated coordinates of the atoms
 		"""
 
 		U = self.Kabsch(coordinates,ref_coordinates)
@@ -201,14 +201,14 @@ class MutateScore():
 		as a list of lists into a list
 
 		PARAMETERS
-        ----------
-        coordinates: array of floats
-        		Coordinates of the atoms
+		----------
+		coordinates: array of floats
+				Coordinates of the atoms
 
-        RETURNS
-        ------
-        new_coordinates: array of floats
-        		Rotated coordinates of the atoms	
+		RETURNS
+		------
+		new_coordinates: array of floats
+				Rotated coordinates of the atoms	
 		"""
 
 		new_coordinates = []
@@ -224,16 +224,16 @@ class MutateScore():
 		the coordinates of the specified atoms.
 
 		PARAMETERS
-        ----------
-        file: string
-        		PDB filename
-        coordinates: array of floats
-        		Coordinates of the atoms
+		----------
+		file: string
+				PDB filename
+		coordinates: array of floats
+				Coordinates of the atoms
 
-        RETURNS
-        ------
-        "".join(Residues): string
-        		The name of the residues that contain the coordinates	
+		RETURNS
+		------
+		"".join(Residues): string
+				The name of the residues that contain the coordinates	
 		"""
 
 		def RoundFloat(number):
@@ -243,14 +243,14 @@ class MutateScore():
 			to float in the FindResidues method.
 
 			PARAMETERS
-	        ----------
-	        number: float
-	        		coordinate in one of the axis
+			----------
+			number: float
+					coordinate in one of the axis
 
-	        RETURNS
-	        ------
-	        A: string
-	        		The string of the coodinates with 3 decimals	
+			RETURNS
+			------
+			A: string
+					The string of the coodinates with 3 decimals	
 			"""
 			A = str(round(number,3))
 			while len(A.split(".")[1]) < 3:
@@ -278,14 +278,14 @@ class MutateScore():
 		residues.
 
 		PARAMETERS
-        ----------
-        combination: list of lists of floats
-        		Coordinates of the atoms of the target residues
+		----------
+		combination: list of lists of floats
+				Coordinates of the atoms of the target residues
 
-        RETURNS
-        ------
-        results: list of lists of a integer and a string
-        		The RMSD and the residues of the combination	
+		RETURNS
+		------
+		results: list of lists of a integer and a string
+				The RMSD and the residues of the combination	
 		"""
 
 		ref_coordinates = self.GetCoordinates(self.__ref_file, True)
@@ -307,9 +307,9 @@ class MutateScore():
 	def main(self):
 		"""
 		Main function
-	
-    	It is called when this script is the main program called by the interpreter
-    	"""
+
+		It is called when this script is the main program called by the interpreter
+		"""
 
 		output = open(self.__output,"w")
 		results = []

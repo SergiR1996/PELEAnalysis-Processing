@@ -166,6 +166,26 @@ def PDB_processing(PDB_filename, Output):
     return water_i, Non_aminoacid_dict
 
 def Printing_summary(PDB_filename, Output, water_i, Non_aminoacid_dict):
+    """
+    Prints a summary of the processing of the PDB file prior to the PELE
+    simulation. It includes the number of water molecules found and the 
+    unconventional molecules found.
+
+    PARAMETERS
+    ----------
+    PDB_filename : string
+                      filename of the input PDB file that wants to be processed
+    Output : string
+                      filename of the output PDB file after processing
+    water_i : integer
+                      number of water molecules found in the PDB input file
+    Non_aminoacid_dict : dictionary
+                      dicitonary with the key:item pair being the unconventional AA and the number of instances                
+
+    RETURNS
+    -------
+    PDB modified file
+    """
 
     Screen_ticks = (gtk.gdk.screen_width()/100)
     

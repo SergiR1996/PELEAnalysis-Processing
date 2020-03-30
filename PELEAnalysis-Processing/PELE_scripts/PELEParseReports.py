@@ -7,7 +7,8 @@ import os
 import glob
 
 def parseReports(reports_to_parse, parser):
-    """It identifies the reports to perform some analysis
+    """
+    It identifies the reports to perform some analysis
 
     PARAMETERS
     ----------
