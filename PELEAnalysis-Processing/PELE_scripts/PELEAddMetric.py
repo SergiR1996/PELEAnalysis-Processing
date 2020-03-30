@@ -73,16 +73,15 @@ def AddMetric(out_directory, residue, metric, column_name, report_format, trajec
     metric_list = []
 
     for trajectory in trajectory_list:
-        #print(trajectory)
         with open(trajectory, 'r') as traj_file:
             m_list,i = [],0
             for line in traj_file:
 
-                if (line.strip()[0:6]=="ATOM  " or line.strip()[0:6]=="HETATM") and line.strip()[22:26].strip() in residue and line.strip()[12:16].strip() in metric:
+                if (line[0:4] == "ATOM  " or line[0:6] == "HETATM") and line[22:26].strip() in residue and line[12:16].strip() in metric:
 
-                    x = float(line.strip()[30:38])
-                    y = float(line.strip()[38:46])
-                    z = float(line.strip()[46:54])
+                    x = float(line[30:38].strip())
+                    y = float(line[38:46].strip())
+                    z = float(line[46:54].strip())
 
                     if i==0:
                         first_elem = [x,y,z]

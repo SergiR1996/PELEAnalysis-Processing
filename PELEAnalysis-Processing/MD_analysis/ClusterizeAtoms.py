@@ -9,60 +9,70 @@ from sklearn import cluster
 from MDAnalysisTools import *
 
 def parseArgs():
-    """
-    Parse arguments from command-line
+	"""
+	Parse arguments from command-line
 
-    RETURNS
-    -------
-    reports : string
-              list of report files to look for data
-    output_path : string
-                  output directory where the csv file will be saved
-    catalytic_event : list of indices
-                  list of column indices
-    to_drop : list of strings
-                  list of column names that want to be dropped
-    """
+	RETURNS
+	-------
+	traj : string
+					list of trajectory files to analyze
+	top : string
+					topology file
+	reference : string
+					Path to the PDB reference file
+	n_processors : integer
+					number of processors to make the analysis
+	cluster_width : float
+					cluster width used in MeanShift algorithm
+	ref_atoms : list of strings
+					the residue number of the reference atoms
+	sim_atoms : list of strings
+					the residue number of the simulation atoms
+	atom_name : string
+					the PDB atom name of the reference PDB file
+	output : string
+					filename of the output file					
+	"""
 
-    parser = ap.ArgumentParser(description='Script that returns the density of the clusters of a selected atom in a trajectory')
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
-    parser.add_argument("traj", metavar="FILE",
-                          type=str, help="path to trajectory file", nargs = '*')
-    parser.add_argument("top", metavar="FILE",
-                          type=str, help="path to topology file")
-    required.add_argument("-R", "--reference", required=True, metavar="FILE",
-                          type=str, help="path to PDB reference file")
-    optional.add_argument("-n", "--n_processors", metavar="INTEGER",
-                          type=int, help="number of processors to make the analysis", default = None)
-    optional.add_argument("-CW", "--cluster_width", metavar="FLOAT",
-                          type=float, help="cluster width in $\AA$", default = 1.5)
-    optional.add_argument("-RW", "--ref_atoms", metavar="LIST",
-                          type=str,nargs='*', help="the residue number of the reference atoms",default = 2)
-    optional.add_argument("-SW", "--sim_atoms", metavar="LIST",
-                          type=str,nargs='*', help="the residue number of the simulation atoms", default = 2)
-    optional.add_argument("-AN","--atom_name", metavar="STRING",
-    					  type=str, help="the PDB atom name of the reference PDB file", default = "_CA_")
-    optional.add_argument("-o","--output", metavar="PATH", type=str,help="filename of the output file", default="centroid")
-    parser._action_groups.append(optional)
-    args = parser.parse_args()
+	parser = ap.ArgumentParser(description='Script that returns the density of the clusters of a selected atom in a trajectory')
+	optional = parser._action_groups.pop()
+	required = parser.add_argument_group('required arguments')
+	parser.add_argument("traj", metavar="FILE",
+							type=str, help="path to trajectory file", nargs = '*')
+	parser.add_argument("top", metavar="FILE",
+							type=str, help="path to topology file")
+	required.add_argument("-R", "--reference", required=True, metavar="FILE",
+							type=str, help="path to PDB reference file")
+	optional.add_argument("-n", "--n_processors", metavar="INTEGER",
+							type=int, help="number of processors to make the analysis", default = None)
+	optional.add_argument("-CW", "--cluster_width", metavar="FLOAT",
+							type=float, help="cluster width in $\AA$", default = 1.5)
+	optional.add_argument("-RW", "--ref_atoms", metavar="LIST",
+							type=str,nargs='*', help="the residue number of the reference atoms",default = 2)
+	optional.add_argument("-SW", "--sim_atoms", metavar="LIST",
+							type=str,nargs='*', help="the residue number of the simulation atoms", default = 2)
+	optional.add_argument("-AN","--atom_name", metavar="STRING",
+							type=str, help="the PDB atom name of the reference PDB file", default = "_CA_")
+	optional.add_argument("-o","--output", metavar="PATH", type=str,help="filename of the output file", default="centroid")
+	parser._action_groups.append(optional)
+	args = parser.parse_args()
 
-    traj, top, reference, n_processors, cluster_width, atom_ref_ids, atom_sim_ids, atom_name, output = args.traj, args.top, args.reference, args.n_processors, args.cluster_width, args.ref_atoms, args.sim_atoms, args.atom_name, args.output
+	traj, top, reference, n_processors, cluster_width, atom_ref_ids, atom_sim_ids, atom_name, output = args.traj, args.top, args.reference, args.n_processors, args.cluster_width, args.ref_atoms, args.sim_atoms, args.atom_name, args.output
 
-    return traj, top, reference, n_processors, cluster_width, atom_ref_ids, atom_sim_ids, atom_name, output
+	return traj, top, reference, n_processors, cluster_width, atom_ref_ids, atom_sim_ids, atom_name, output
 
 def GetCoordinates(file,atom_ref_ids, atom_name):
 	"""
 	This function returns the coordinates of a PDB file.
 
 	PARAMETERS
-    ----------
-    file : string
-            PDB filename
+	----------
+	file : string
+			PDB filename
 
-    RETURNS
-    ------
-    res_coord: list of floats
+	RETURNS
+	------
+	res_coord: list of floats
 	"""
 
 	PDB = open(file)
@@ -140,20 +150,20 @@ def ClusterizeAtoms(traj,top,reference,atom_sim_ids,atom_ref_ids, cluster_width,
 	centroids = Estimator.cluster_centers_
 	n_clusters = len(centroids)
 	with open(output+".pdb", 'w') as f:
-	 	for i, centroid in enumerate(centroids):
-	 		f.write("ATOM    {:3d}  CEN BOX A {:3d} {:>11.3f}{:>8.3f}{:>8.3f}  1.00{:>5.2f}\n".format(i+1, i+1, *centroid, density[i]))
+		for i, centroid in enumerate(centroids):
+			f.write("ATOM    {:3d}  CEN BOX A {:3d} {:>11.3f}{:>8.3f}{:>8.3f}  1.00{:>5.2f}\n".format(i+1, i+1, *centroid, density[i]))
 
 
 def main():
-    """
-    Main function
+	"""
+	Main function
 
-    It is called when this script is the main program called by the interpreter
-    """
+	It is called when this script is the main program called by the interpreter
+	"""
 
-    traj, top, reference, n_processors, cluster_width, atom_ref_ids, atom_sim_ids, atom_name, output = parseArgs()
+	traj, top, reference, n_processors, cluster_width, atom_ref_ids, atom_sim_ids, atom_name, output = parseArgs()
 
-    ClusterizeAtoms(traj, top, reference, atom_sim_ids, atom_ref_ids, cluster_width, n_processors, atom_name, output)
+	ClusterizeAtoms(traj, top, reference, atom_sim_ids, atom_ref_ids, cluster_width, n_processors, atom_name, output)
 
 if __name__=="__main__":
 	main()

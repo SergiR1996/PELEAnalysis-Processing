@@ -19,7 +19,8 @@ __email__="sergi.rodallordes@bsc.es"
 
 # Functions
 def parseArgs():
-    """Parse arguments from command-line
+    """
+    Parse arguments from command-line
 
     RETURNS
     -------
@@ -59,7 +60,8 @@ def parseArgs():
 
 
 def Storebesttrajectories(reports,metric,energy=-50.0,sasa=0.3):
-    """It looks on the report files and finds the best trajectories (the minima).
+    """
+    It looks on the report files and finds the best trajectories (the minima).
 
     RETURNS
     -------
@@ -111,7 +113,8 @@ def Storebesttrajectories(reports,metric,energy=-50.0,sasa=0.3):
 
 
 def Reportbesttrajectories(Below50,Below55,Below60,Sasa03,energy=-50.0,sasa=0.3,output_path="Important_trajectories"):
-    """It looks on the report files and finds the best trajectories (the minima).
+    """
+    It looks on the report files and finds the best trajectories (the minima).
 
     RETURNS
     -------
@@ -138,7 +141,8 @@ def Reportbesttrajectories(Below50,Below55,Below60,Sasa03,energy=-50.0,sasa=0.3,
 
 
 def main():
-    """Main function
+    """
+    Main function
 
     It is called when this script is the main program called by the interpreter
     """

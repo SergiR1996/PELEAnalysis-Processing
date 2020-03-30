@@ -57,9 +57,9 @@ class BindingSiteIsolator(object):
 		This method takes the specified residues in the BindingSiteIsolator class
 		instance and return the centroid of their coordinates
 
-    	RETURNS
-    	-------
-    	coords : 3D coordinates of the centroid (list of floats)
+		RETURNS
+		-------
+		coords : 3D coordinates of the centroid (list of floats)
 		"""
 
 		coords = []
@@ -158,9 +158,9 @@ class BindingSiteIsolator(object):
 	def main(self):
 		"""
 		Main function
-	
-    	It is called when this script is the main program called by the interpreter
-    	"""
+
+		It is called when this script is the main program called by the interpreter
+		"""
 
 		neighboring_residues = self.GetNeighboringAtoms(self.GetBindingSiteCoordinates())
 		

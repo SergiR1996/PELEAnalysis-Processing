@@ -21,7 +21,8 @@ __email__="sergi.rodallordes@bsc.es"
 
 # Functions
 def parseArgs():
-    """Parse arguments from command-line
+    """
+    Parse arguments from command-line
 
     RETURNS
     -------
@@ -87,7 +88,8 @@ def Storeresults(reports,CE, output_path):
 
 
 def main():
-    """Main function
+    """
+    Main function
 
     It is called when this script is the main program called by the interpreter
     """
