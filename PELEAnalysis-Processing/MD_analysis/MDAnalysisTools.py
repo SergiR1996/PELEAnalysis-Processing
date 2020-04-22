@@ -9,6 +9,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Script information
+__author__ = "Sergi Rodà"
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Sergi Rodà"
+__email__ = "sergi.rodallordes@bsc.es"
+
 class OpenFiles:
 
 	"""

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+# Global imports
 import sys,time
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -9,10 +10,11 @@ import argparse as ap
 import multiprocessing as mp
 
 # Script information
-__author__ = "Sergi Rodà Llordés"
-__version__ ="1.0"
-__maintainer__="Sergi Rodà Llordés"
-__email__="sergi.rodallordes@bsc.es"
+__author__ = "Sergi Rodà"
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Sergi Rodà"
+__email__ = "sergi.rodallordes@bsc.es"
 
 
 class MutateScore():

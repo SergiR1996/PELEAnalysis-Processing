@@ -1,0 +1,236 @@
+#!/usr/bin/env python
+
+# Global imports
+from tkinter import *
+from tkinter import messagebox
+from tkinter.filedialog import askopenfilename, askdirectory
+from tkinter.simpledialog import askstring, askinteger
+import tkinter.font as tkFont
+import os, subprocess
+import webbrowser
+
+# Global variables
+global CWD
+CWD = os.getcwd().replace("&","\&")
+
+# Script information
+__author__ = "Sergi Rodà"
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Sergi Rodà"
+__email__ = "sergi.rodallordes@bsc.es"
+
+class MenuFrame:
+	"""
+	This class contains the menu frame of the GUI of the PELEAnalysis-Preprocessing tools
+	"""
+	
+	def __init__(self, master):
+		menu = Menu(master)
+		master.config(menu = menu)
+		FMenu = Menu(menu)
+		menu.add_cascade(label="File", menu=FMenu, font = "helvetica 14 bold")
+		FMenu.add_command(label="Input", command=self.get_input, font = "helvetica 14")
+		FMenu.add_command(label="Output", command=self.get_output_path, font = "helvetica 14")
+		FMenu.add_separator()
+		FMenu.add_command(label="Exit", command=menu.quit, font = "helvetica 14")
+
+		HMenu = Menu(menu)
+		menu.add_cascade(label="Help", menu=HMenu, font = "helvetica 14 bold")
+		HMenu.add_command(label="About...", command=self.call_help, font = "helvetica 14")
+		HMenu.add_command(label="GUI usage", command=self.GUI_usage, font = "helvetica 14")
+
+	def get_input(self):
+		return askopenfilename(title="Any file", filetypes=[("All types","*")])
+
+	def get_output_path(self):
+		return askdirectory(title="Output path of PELEAnalysis-Preprocessing tools")
+
+	def call_help(self):
+		messagebox.showinfo("Help message", "This is the GUI version of the PELEAnalysis-Preprocessing tools from the following GIT repository: \n\nhttps://github.com/SergiR1996/PELEAnalysis-Processing")
+		if messagebox.askyesno("Visit Website","Do you want to visit the GIT repository in GitHub?"):
+			webbrowser.open_new(r"https://github.com/SergiR1996/PELEAnalysis-Processing")
+
+	def GUI_usage(self):
+		messagebox.showinfo("How to use the GUI of PELEAnalysis-Preprocessing", "The top menu in the GUI is basically to get the input file and the output path for all the applications. Still, these can be specified when using the different tools. The other thing is to get Help from the information in the GitHub webpage.")
+		
+class App:
+	"""
+	This class contains the main frame of the GUI of the PELEAnalysis-Preprocessing tools
+	"""
+	
+	def __init__(self, master):
+		self.frame = LabelFrame(master, text="PELEAnalysis-Preprocessing: applications", padx="10", pady="10", font = "helvetica 14")
+		self.frame.pack()
+
+		self.sequence_handler = Button(self.frame, text="Sequence handler", command=self.handle_sequences, font = "helvetica 14 bold")
+		self.sequence_handler.pack()
+
+		self.protein_mutator = Button(self.frame, text="Protein Mutator", command=self.protein_mutate, font = "helvetica 14 bold")
+		self.protein_mutator.pack()
+
+		self.pele_scripts = Button(self.frame, text="PELE Scripts", command=self.PELE_scripting, font = "helvetica 14 bold")
+		self.pele_scripts.pack()
+
+		self.quit_button = Button(
+		    self.frame, text="Quit", fg="red", command=self.frame.quit, font = "helvetica 14 bold")
+		self.quit_button.pack()
+
+		self.bl = ""
+
+	def PELE_scripting(self):
+		"""
+		Method that contains all the buttons and their actions
+		when the PELE Scripts has been pressed.
+		"""
+
+		HStop = Toplevel()
+		HStop.title("PELE Scripts"); HStop.geometry("400x400")
+		self.bl = Label(HStop, text='', font = "helvetica 10"); self.bl.pack()
+		b1 = Button(HStop, text = "Add Metric", command = self.add_metric, font = "helvetica 12")
+		b2 = Button(HStop, text = "Best Trajectories", command = self.best_traj, font = "helvetica 12")
+		b3 = Button(HStop, text = "Calculate BindingE Diff", command = self.bindEDiff, font = "helvetica 12")
+		b4 = Button(HStop, text = "PELEPlot", command = self.PELEPlot, font = "helvetica 12")
+		b5 = Button(HStop, text = "Quit", command = HStop.destroy, font = "helvetica 12")
+		b1.pack(); b2.pack(); b3.pack(); b4.pack(); b5.pack()
+
+	def add_metric(self):
+		Report_path = askdirectory(title = "The path to the report and trajectory files")
+		Metric_residues = askstring("The residues of the metric", "Specify the list of residues of the metric")
+		Atom_name = askstring("The PDB atom name", "Insert the PDB atom name with the spaces put as _")
+		Res_names = askstring("Name of the residues","Specify the name of the residues involved in the metric")
+		Column_name = askstring("Column name of the new calculated metric", "Specify the column name of the new calculated metric")
+		output = subprocess.check_output("python PELE_scripts/PELEAddMetric.py -i {} -R {} -M {} -RN {} -CN {}".format(Report_path, Metric_residues, Atom_name, Res_names, Column_name), shell = True)
+		self.bl['text'] = output.strip()
+
+	def best_traj(self):
+		Report_path = askdirectory(title = "The path to the report files")
+		Report_path = os.path.join(Report_path,"*out")
+		Output_filename = askstring("Output filename", "Specify the output filename of the script")
+		Energy_cutoff = askstring("Energy cutoff", "Specify the energy cutoff (float)")
+		SASA_cutoff = askstring("SASA cutoff", "Specify the SASA cutoff (float)")
+		Column_index = askinteger("Column index", "Enter the column index of the desired metric")
+		output = subprocess.check_output("python PELE_scripts/PELEBestTrajectories.py -i {} -o {} -E {} -S {} -M {}".format(Report_path, Output_filename, Energy_cutoff, SASA_cutoff, Column_index), shell = True)
+		self.bl['text'] = output.strip()		
+
+	def bindEDiff(self):
+		Report_path = askdirectory(title = "The path to the report files")
+		Report_path = os.path.join(Report_path,"*out")
+		Output_filename = askstring("Output filename", "Specify the output filename of the script")
+		Column_index = askinteger("Column index", "Enter the column index of the desired metric")
+		Threshold = askstring("Threshold","Specifiy th value(s) of the metric(s) that separates the states")
+		output = subprocess.check_output("python PELE_scripts/PELECalculateBEDiff.py -i {} -o {} -M {} -T {}".format(Report_path, Output_filename, Column_index, Threshold), shell = True)
+		self.bl['text'] = output.strip()
+
+	def PELEPlot(self):
+		Report_path = askdirectory(title = "The path to the report files")
+		Report_path = os.path.join(Report_path,"*out")
+		X_column = askinteger("Column index of X axis", "Enter the column index of the X axis")
+		X_cname = ""
+		Y_column = askinteger("Column index of Y axis", "Enter the column index of the Y axis")
+		Y_cname = ""
+		Z_column = askinteger("Column index of Z axis", "Enter the column index of the Z axis")
+		Z_cname = ""
+		if messagebox.askyesno("Do you want to specify the names of the axis?"):
+			X_cname = askstring("Name of the X axis", "Enter the name of the X axis")
+			Y_cname = askstring("Name of the Y axis", "Enter the name of the Y axis")
+			Z_cname = askstring("Name of the Z axis", "Enter the name of the Z axis")
+		output = subprocess.check_output("python PELE_scripts/PELEPlot3.py -i {} -X {} {} -Y {} {} -Z {} {} -SP -S 16".format(Report_path,X_column,X_cname,Y_column,Y_cname,Z_column,Z_cname), shell = True)
+		self.bl['text'] = output.strip()
+
+	def protein_mutate(self):
+		"""
+		Method that contains all the buttons and their actions
+		when the Protein Mutator has been pressed.
+		"""
+
+		HStop = Toplevel()
+		HStop.title("Protein Mutator"); HStop.geometry("400x400")
+		self.bl = Label(HStop, text='', font = "helvetica 10"); self.bl.pack()
+		b1 = Button(HStop, text = "Mutate Score", command = self.mutate_score, font = "helvetica 12")
+		b2 = Button(HStop, text = "Binding Site Isolator", command = self.bsi, font = "helvetica 12")
+		b3 = Button(HStop, text = "Quit", command = HStop.destroy, font = "helvetica 12")
+		b1.pack(); b2.pack(); b3.pack()
+
+	def mutate_score(self):
+		Working_directory = askdirectory(title = "the working directory")
+		Ref_filename = askopenfilename(title="The reference PDB file", filetypes=[("PDB file",".pdb")])
+		Input_filename = askopenfilename(title="The input PDB file", filetypes=[("PDB file",".pdb")])
+		Output_filename = askstring("The output filename", "Write down the output filename")
+		List_of_residues = askstring("The list of residues", "Specify the list of residues with spaces")
+		Output_filename = os.path.join(Working_directory, Output_filename)
+		output = subprocess.check_output("python Protein_Mutator/MutateScore.py {} {} -r {} -O {}".format(Ref_filename, Input_filename, List_of_residues, Output_filename), shell = True)
+		self.bl['text'] = output.strip()
+
+	def bsi(self):
+		Input_filename = askopenfilename(title="The input PDB file", filetypes=[("PDB file",".pdb")])
+		List_of_residues = askstring("The list of residues", "Specify the list of residues with spaces")
+		Radius = askinteger("Radius around selected residues", "Specify the value of the radius (in Ang)")		
+		output = subprocess.check_output("python Protein_Mutator/BindingSiteIsolator.py {} -r {} -R {}".format(Input_filename, List_of_residues, Radius), shell = True)
+		self.bl['text'] = output.strip()
+
+	def handle_sequences(self):
+		"""
+		Method that contains all the buttons and their actions
+		when the Sequence handler has been pressed.
+		"""
+			
+		HStop = Toplevel()
+		HStop.title("Sequence handler"); HStop.geometry("400x400")
+		self.bl = Label(HStop, text='', font = "helvetica 10"); self.bl.pack()
+		b1 = Button(HStop, text = "Reverse complement", command = self.reverse_complement, font = "helvetica 12")
+		b2 = Button(HStop, text = "Trim", command = self.trim, font = "helvetica 12")
+		b3 = Button(HStop, text = "Adaptor", command = self.adaptor_removal, font = "helvetica 12")
+		b4 = Button(HStop, text = "Align", command = self.alignment, font = "helvetica 12")
+		b5 = Button(HStop, text = "Quit", command = HStop.destroy, font = "helvetica 12")
+		b1.pack(); b2.pack(); b3.pack(); b4.pack(); b5.pack()
+
+	def ask_input_and_output_filenames(self):
+		"""
+		Helper method to get the input file, the output path, and the output filename.
+		"""
+		Input = askopenfilename(title="The input FASTA/Q file", filetypes=[("FASTA/Q file",".fasta .fa .fsa .fastq -fq .fsq")])
+		Output = askdirectory(title="The output path")
+		if type(Output) == tuple: Output = CWD
+		Out_name = askstring("Output filename", "Write down the desired output filename")
+		if Out_name is None: Out_name = "output"
+		
+		return [Input, os.path.join(Output, Out_name)]
+
+	def reverse_complement(self):
+		Input_filename, Output_filename = self.ask_input_and_output_filenames()
+		output = subprocess.check_output("python Sequence_handler/Sequence_handler.py -i {} -o {} -O rc".format(Input_filename, Output_filename+".fasta"), shell = True)
+		self.bl['text'] = output.strip()
+
+	def trim(self):
+		Trim_left = askinteger("Trim left", "Specify the number of bases trimmed at the left")
+		Trim_right = askinteger("Trim right", "Specify the number of bases trimmed at the right")
+		Input_filename, Output_filename = self.ask_input_and_output_filenames()
+		output = subprocess.check_output("python Sequence_handler/Sequence_handler.py -i {} -o {} -O trim -TL {} -TR {}".format(Input_filename, Output_filename+".fasta", Trim_left, Trim_right), shell = True)
+		self.bl['text'] = output.strip()
+
+	def adaptor_removal(self):
+		Adaptor = askstring("Adaptor","Specify the adaptor to remove from the sequence")
+		Input_filename, Output_filename = self.ask_input_and_output_filenames()
+		output = subprocess.check_output("python Sequence_handler/Sequence_handler.py -i {} -o {} -O ar -A {}".format(Input_filename, Output_filename+".fasta", Adaptor), shell = True)
+		self.bl['text'] = output.strip()
+
+	def alignment(self):
+		Input_filename, Output_filename = self.ask_input_and_output_filenames()
+		Second_Input = askopenfilename(title="The 2nd input FASTA/Q file", filetypes=[("FASTA/Q file",".fasta .fa .fsa .fastq -fq .fsq")])
+		output = subprocess.check_output("python Sequence_handler/Sequence_handler.py -i {} -o {} -O aln -i2 {}".format(Input_filename, Output_filename+".aln", Second_Input), shell = True)
+		self.bl['text'] = output.strip()
+
+
+if __name__=="__main__":
+	"""It is executed when the script is called"""
+	# Options to modify the main window of the GUI
+	root = Tk()
+	root.title("PELEAnalysis-Preprocessing : GUI version")
+	root.config(padx="10",pady="10")
+	root.geometry("600x600")
+
+	menu = MenuFrame(root)
+	app = App(root)
+	root.mainloop()
+

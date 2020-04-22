@@ -4,17 +4,18 @@
 import argparse as ap # To parse all the command-line arguments in a more fancy way
 
 # Local imports
-from FASTA_Q import *
+from SequenceOperator import *
 
 # Script information
 __author__ = "Sergi Rodà"
-__license__ = "GPL"
+__license__ = "MIT"
 __version__ = "1.0.1"
 __maintainer__ = "Sergi Rodà"
 __email__ = "sergi.rodallordes@bsc.es"
 
 def parseArgs():
-    """Parse arguments from command-line
+    """
+    Parse arguments from command-line
 
     RETURNS
     -------
@@ -43,7 +44,7 @@ def parseArgs():
     required.add_argument("-o", "--output", required=True, metavar="FILE",
                           type=str, help="path of output file")
     required.add_argument("-O", "--operation", required=True, metavar="STRING",
-                          type=str, help="operation flag (rc, trim, adaptor-removal, alignment")
+                          type=str, help="operation flag (rc, trim, adaptor-removal, alignment)")
     optional.add_argument("-TL", "--trimleft", metavar="INTEGER",
                           type=int, help="number of bases trimmed at the left")
     optional.add_argument("-TR", "--trimright", metavar="INTEGER",
@@ -73,7 +74,8 @@ def parseArgs():
     return Input_filename, Output_filename, Operation, TL, TR, Adaptor, Input_filename2
 
 def main():
-    """Main function
+    """
+    Main function
 
     It is called when this script is the main program called by the interpreter
     """
@@ -81,7 +83,7 @@ def main():
     # Parse command-line arguments
     Input_filename, Output_filename, Operation, TL, TR, Adaptor, Input_filename2 = parseArgs()
 
-    fasta_q = FASTA_Q(Input_filename, Output_filename, TL, TR, Adaptor, Input_filename2)
+    fasta_q = SequenceOperator(Input_filename, Output_filename, TL, TR, Adaptor, Input_filename2)
 
     # Execute the operation specified in the flag
     if Operation.lower() == "rc":

@@ -18,11 +18,11 @@ from PELEParseReports import *
 
 
 # Script information
-__author__ = "Marti Municoy"
-__license__ = "GPL"
+__author__ = ["Marti Municoy", "Sergi Rodà"]
+__license__ = "MIT"
 __version__ = "1.0.1"
-__maintainer__ = "Marti Municoy"
-__email__ = "marti.municoy@bsc.es"
+__maintainer__ = ["Marti Municoy", "Sergi Rodà"]
+__email__ = ["marti.municoy@bsc.es","sergi.rodallordes@bsc.es"]
 
 # Possible font of the axis and the title+
 Dict_of_fonts={"title" : {'family': 'serif',

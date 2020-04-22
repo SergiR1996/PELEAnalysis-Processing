@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 # Global imports
 from __future__ import unicode_literals
 import os
@@ -12,12 +11,12 @@ import numpy as n
 # Local imports
 from PELEParseReports import *
 
-
 # Script information
-__author__ = "Sergi Rodà Llordés"
-__version__ ="1.0"
-__maintainer__="Sergi Rodà Llordés"
-__email__="sergi.rodallordes@bsc.es"
+__author__ = "Sergi Rodà"
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Sergi Rodà"
+__email__ = "sergi.rodallordes@bsc.es"
 
 # Functions
 def parseArgs():

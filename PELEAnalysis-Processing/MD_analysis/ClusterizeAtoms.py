@@ -8,6 +8,13 @@ from sklearn import cluster
 # Local imports 
 from MDAnalysisTools import *
 
+# Script information
+__author__ = "Sergi Rodà"
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Sergi Rodà"
+__email__ = "sergi.rodallordes@bsc.es"
+
 def parseArgs():
 	"""
 	Parse arguments from command-line

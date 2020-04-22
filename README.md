@@ -1,5 +1,8 @@
 # PELEAnalysis-Processing
 
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://doge.mit-license.org/)
+![Github release](https://img.shields.io/github/release/PELEAnalysis-Processing/PELEAnalysis-Processing.svg)
+
 This repository contains Python scripts to analyze [PELE](https://pele.bsc.es/pele.wt) & [MD](https://en.wikipedia.org/wiki/Molecular_dynamics) simulations, to preprocess & process the systems ([PDB](http://www.wwpdb.org/documentation/file-format) files), tools for esterases, the mutation of PDB files using [Schrodinger](https://www.schrodinger.com/) Python API, and many more.
 
 ## Installation
@@ -8,7 +11,7 @@ A set of Python libraries are necessary to run the scripts of this Git repositor
 
 ## Requirements
 
-* Python 2.7 or higher or Python 3.1 or higher must be installed.
+* Python 2.7 or higher or Python 3.1 or higher must be installed (To use all the scripts in the repository, Python 3.1 or higher is recommended).
 
 * Schrodinger Python API for Preprocessing and Protein\_Mutator scripts.
 
@@ -37,7 +40,7 @@ The vast majority of created tools contain a specific argument parser using the 
 <b> Sequence alignment </b>
 
 ```
-python Sequence\_handler.py -i P1.fasta -i2 P2.fasta -o P.aln -O alignment
+python Sequence_handler.py -i P1.fasta -i2 P2.fasta -o P.aln -O alignment
 ```
 
 If there are no issues in the input files, the alignment output file will be written and a exit message will be printed in the command line.
@@ -49,7 +52,7 @@ File 'P1.fasta' has been successfully aligned with 'P2.fasta'
 And the alignment file will look like this:
 
 ```
-0 (Identity: 54.5454545455%, Similarity: 90.9090909091%, Gaps: 9.09090909091%): 
+0 (Identity: 54.5454545455%, Similarity: 81.8181818182%, Gaps: 9.09090909091%): 
 SARLKVRKDMA
 :.|||:|||  
 TGRLKLRKD-E

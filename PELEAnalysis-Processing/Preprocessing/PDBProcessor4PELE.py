@@ -6,11 +6,11 @@ import glob,gtk
 import argparse as ap
 
 # Script information
-
-__author__ = "Sergi Rodà Llordés"
-__version__ ="1.0"
-__maintainer__="Sergi Rodà Llordés"
-__email__="sergi.rodallordes@bsc.es"
+__author__ = "Sergi Rodà"
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Sergi Rodà"
+__email__ = "sergi.rodallordes@bsc.es"
 
 # Global variables
 Protein_list = ["GLY","ALA","VAL","LEU","ILE","SER","THR","ARG","LYS","PHE","TYR","TRP","ASP","GLU","ASN","GLN","PRO","CYS","CYX","MET","HIS","HID","HIE","HIP","HOH"]

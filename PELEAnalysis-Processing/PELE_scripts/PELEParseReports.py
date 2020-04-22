@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 
-
-# Imports
+# Global imports
 from __future__ import unicode_literals
 import os
 import glob
+
+# Script information
+__author__ = "Sergi Rodà"
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Sergi Rodà"
+__email__ = "sergi.rodallordes@bsc.es"
 
 def parseReports(reports_to_parse, parser):
     """

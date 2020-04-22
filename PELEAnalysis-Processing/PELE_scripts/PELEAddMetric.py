@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 # Global imports
 from __future__ import unicode_literals
 import os
@@ -14,10 +13,11 @@ import numpy as n
 from PELEParseReports import *
 
 # Script information
-__author__ = "Sergi Rodà Llordés"
-__version__ ="1.0"
-__maintainer__="Sergi Rodà Llordés"
-__email__="sergi.rodallordes@bsc.es"
+__author__ = "Sergi Rodà"
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Sergi Rodà"
+__email__ = "sergi.rodallordes@bsc.es"
 
 # Functions
 def parseArgs():
@@ -38,7 +38,9 @@ def parseArgs():
     required.add_argument("-R", "--residue", metavar="INTEGER", type=str,nargs='*',
                           help="residue number of the residues involved in the metric")
     required.add_argument("-M", "--metric", metavar="STRING", type=str,nargs='*',
-                          help="desired metric to calculate with the atom names")
+                          help="desired metric to calculate with the atom names (indicate with _)")
+    required.add_argument("-RN", "--res_name", metavar="STRING", type=str,nargs='*',
+                          help="name of the two residues involved in the distance metric to avoid confusions")
     optional.add_argument("-CN","--column_name", metavar="STRING",type=str,
                           help="column name of the new metric", default="New_metric")
     optional.add_argument("-RF","--report_format", metavar="STRING",type=str,
@@ -48,11 +50,11 @@ def parseArgs():
     parser._action_groups.append(optional)
     args = parser.parse_args()
 
-    out_directory, residue, metric, column_name, report_format, trajectory_format = args.input, args.residue, args.metric, args.column_name, args.report_format, args.trajectory_format
+    out_directory, residue, metric, res_name, column_name, report_format, trajectory_format = args.input, args.residue, args.metric, args.res_name, args.column_name, args.report_format, args.trajectory_format
 
-    return out_directory, residue, metric, column_name, report_format, trajectory_format
+    return out_directory, residue, metric, res_name, column_name, report_format, trajectory_format
 
-def AddMetric(out_directory, residue, metric, column_name, report_format, trajectory_format):
+def AddMetric(out_directory, residue, metric, res_name, column_name, report_format, trajectory_format):
     """
     Take the PELE simulation trajectory files and returns the report files with the desired metric
 
@@ -77,7 +79,7 @@ def AddMetric(out_directory, residue, metric, column_name, report_format, trajec
             m_list,i = [],0
             for line in traj_file:
 
-                if (line[0:4] == "ATOM  " or line[0:6] == "HETATM") and line[22:26].strip() in residue and line[12:16].strip() in metric:
+                if (line[0:4] == "ATOM" or line[0:6] == "HETATM") and (line[22:26].strip() == residue[0] and line[12:16].replace(" ","_") == metric[0] and line[17:20] == res_name[0]) or (line[22:26].strip() == residue[1] and line[12:16].replace(" ","_") == metric[1] and line[17:20] == res_name[1]):
 
                     x = float(line[30:38].strip())
                     y = float(line[38:46].strip())
@@ -102,12 +104,17 @@ def AddMetric(out_directory, residue, metric, column_name, report_format, trajec
             j+=1
 
         with open(report, 'r') as report_file:
-            out_report = open(report.split(".out")[0]+"_metric.out",'w')
+            if report.endswith(".out"):
+                out_report = open(report.split(".out")[0]+"_metric.out",'w')
+            else:
+                out_report = open(report+"_metric.out",'w')
             for i,line in enumerate(report_file):
                 if i==0:
                     out_report.write(line.strip("\n")+'    '+column_name+"\n")
                 else:
                     out_report.write(line.strip("\n")+'    '+str(metric_list[j][i-1])+"\n")
+    
+    print("%s report files have the desired metric added"%j)
 
 def main():
     """
@@ -117,10 +124,10 @@ def main():
     """
 
     # Parse command-line arguments
-    out_directory, residue, metric, column_name, report_format, trajectory_format  = parseArgs()
+    out_directory, residue, metric, res_name, column_name, report_format, trajectory_format  = parseArgs()
 
     # Add the desired metric to the report file
-    AddMetric(out_directory, residue, metric, column_name, report_format, trajectory_format)
+    AddMetric(out_directory, residue, metric, res_name, column_name, report_format, trajectory_format)
 
 
 if __name__ == "__main__":

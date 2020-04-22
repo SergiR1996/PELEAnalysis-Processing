@@ -8,7 +8,7 @@ This script is for analysing the trajectories obtained by any software. It will 
 analysis. There will be some flag options which the user can pick on and the files and plots will be saved in a new
 created directory
 
-                                    Done by: Ruben Canadas Rodriguez & Sergi Rodà Llordés
+                                    Done by: Sergi Rodà Llordés
 
 """
 
@@ -17,6 +17,13 @@ import argparse as ap
 
 # Local imports 
 from MDAnalysisTools import *
+
+# Script information
+__author__ = "Sergi Rodà"
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Sergi Rodà"
+__email__ = "sergi.rodallordes@bsc.es"
 
 def parseArgs():
 
