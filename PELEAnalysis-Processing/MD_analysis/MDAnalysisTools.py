@@ -125,6 +125,20 @@ class TrajectoryProperties:
         return new_metric
 
 
+    def radians_to_degrees(func):
+
+        """
+        This will be a decoration method
+        :param func: Function to decorate
+        :return:
+        """
+
+        def new_metric(self, pairs):
+            return np.degrees(func(self,  pairs))
+
+        return new_metric
+
+
     #@nanometer_to_angstrom
     def traj_rmsd(self, reference, atom_indices):
 
@@ -171,7 +185,7 @@ class TrajectoryProperties:
 
         return md.compute_contacts(self.traj, residue_pairs)
 
-
+    @radians_to_degrees
     def compute_angles(self, angle_indices):
 
         """
@@ -227,6 +241,20 @@ class TrajectoryProperties:
         """
 
         return md.compute_inertia_tensor(self.traj)
+
+    def compute_hydrogen_bonds(self, freq = 0.1):
+
+        """
+        Identify hydrogen bonds based on cutoffs for the Donor-H...Acceptor distance and angle.
+        """
+
+        list_of_hbonds = []
+        hbonds = md.baker_hubbard(self.traj, freq = freq)
+        label = lambda hbond : '%s -- %s' % (self.traj.topology.atom(hbond[0]), self.traj.topology.atom(hbond[2]))
+        for hbond in hbonds:
+            list_of_hbonds.append(label(hbond))
+
+        return list_of_hbonds
 
 
 

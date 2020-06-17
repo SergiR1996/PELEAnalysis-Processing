@@ -72,11 +72,38 @@ class App:
 		self.pele_scripts = Button(self.frame, text="PELE Scripts", command=self.PELE_scripting, font = "helvetica 14 bold")
 		self.pele_scripts.pack()
 
+		self.preprocessor = Button(self.frame, text = "PDB Processor", command=self.preprocessing, font = "helvetica 14 bold")
+		self.preprocessor.pack()
+
 		self.quit_button = Button(
 		    self.frame, text="Quit", fg="red", command=self.frame.quit, font = "helvetica 14 bold")
 		self.quit_button.pack()
 
 		self.bl = ""
+
+	def preprocessing(self):
+		"""
+		Method that contains all the performed action
+		when the PDB Processor has been pressed.
+		"""
+		HStop = Toplevel()
+		HStop.title("PDB Processor"); HStop.geometry("400x400")
+		self.bl = Label(HStop, text='', font = "helvetica 10"); self.bl.pack()
+		b1 = Button(HStop, text = "Preprocess", command = self.ppp, font = "helvetica 12")
+		b2 = Button(HStop, text = "Quit", command = HStop.destroy, font = "helvetica 12")
+		b1.pack(); b2.pack()
+
+	def ppp(self):
+		Input_filename = askopenfilename(title="The input PDB file", filetypes=[("PDB file",".pdb")])
+		Output_filename = askstring("The output filename", "Write down the output filename (Optional)")
+		Residue_name_list = askstring("Residue name of the modified amino acids", "Write down the residue name of the modified amino acids with spaces")
+		if Residue_name_list == "":
+			Residue_name_list = []
+		if Output_filename!="":
+			output = subprocess.check_output("python Preprocessing/PDBProcessor4PELE.py -i {} -O {} -RN {}".format(Input_filename, Output_filename,Residue_name_list), shell = True)
+		else:
+			output = subprocess.check_output("python Preprocessing/PDBProcessor4PELE.py -i {} -RN {}".format(Input_filename,Residue_name_list), shell = True)
+		self.bl['text'] = output.strip()
 
 	def PELE_scripting(self):
 		"""

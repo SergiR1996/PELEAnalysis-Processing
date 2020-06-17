@@ -14,6 +14,7 @@ created directory
 
 # Global imports
 import argparse as ap
+import pickle
 
 # Local imports 
 from MDAnalysisTools import *
@@ -47,12 +48,14 @@ def parseArgs():
     parser.add_argument("-SP", "--save_plot", help="Save plots in directory", action="store_true")
     parser.add_argument("-T","--time", help="Conversion factor from frames to time-scale", type=float, default=1)
     parser.add_argument("-AC", "--acid", help="Take into account for Acid-His distance", action="store_true")
+    parser.add_argument("-HB", "--hbond", help="Calculate the H-bonds along the trajectories", action="store_true")
     parser.add_argument("-PN", "--pickle_name", help="name of the stored pickle name", type=str, default="")
+    parser.add_argument("-AN","--angle", type=int, help="Three atoms (number) to compute the angle between them along the trajectory",nargs=3)
 
     args = parser.parse_args()
 
     return args.traj, args.top, args.rmsd, args.rmsf, args.localrmsd, args.distance, args.catalytic_distance, args.contact, args.displacement, args.gyration , args.sasa, \
-           args.plot_style, args.plot, args.save_plot, args.time, args.acid, args.pickle_name
+           args.plot_style, args.plot, args.save_plot, args.time, args.acid, args.pickle_name, args.hbond, args.angle
 
 
 
@@ -82,7 +85,7 @@ def main():
         plot_object.box_plot()
         plot_object.density_plot()
 
-    tra, top, rmsd, rmsf, local_rmsd, distance, catalytic_distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time, acid, pickle_name = parseArgs()
+    tra, top, rmsd, rmsf, local_rmsd, distance, catalytic_distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time, acid, pickle_name, hbond, angle = parseArgs()
 
     traj = OpenFiles(tra, top)
     number_of_frames = 10000000
@@ -98,11 +101,14 @@ def main():
     x_axis  = np.arange(0,number_of_frames,1)*time
     Residue_number = [i for i in range(len(trajectory[0].topology.select("name CA")))]
     
-    RMSD, LRMSD, RMSF, Distances, Contacts = [],[],[],[],[]
+    RMSD, LRMSD, RMSF, Distances, Contacts, Angles = [],[],[],[],[],[]
 
     for traj in trajectory:
 
         prop = TrajectoryProperties(traj)
+
+        if hbond:
+            HB.append(prop.compute_hydrogen_bonds(freq = 0.3))
 
         if rmsd:
 
@@ -163,10 +169,27 @@ def main():
                 His_index=int(traj.topology.select("resSeq {} and name NE2 and protein".format(catalytic_distance[1])))
                 Distances.append(prop.compute_distance([[Ser_index,His_index]]))
 
+        if angle is not None:
+
+            Angles.append(prop.compute_angles([angle]))
+
         if contact is not None:
 
             Contacts.append(prop.compute_contacts([contact]))
             pl = Plotter(x_axis, contacts, x_label = "Time (ns)", y_label = "Distance ($\AA$)", figure_name="contact", plot=plot, save=save_plot)
+
+    if hbond:
+        HB_file = open("H_bond_results.txt","w")
+        HB_dict = {}
+        for elem in HB:
+            for subelem in elem:
+                if subelem not in HB_dict:
+                    HB_dict[subelem] = 1
+                else:
+                    HB_dict[subelem] += 1
+        for key,value in HB_dict.items():
+            v = value/4
+            HB_file.write("%s : %s\n"%(key,v))
 
     if rmsd:
         RMSD = average_property(RMSD)
@@ -204,6 +227,12 @@ def main():
         Contacts = average_property(Contacts)
         save_pickle(pickle_name, "Contact", Contacts, x_axis)
         execute_plots(x_axis,Contacts,"Time (ns)","Distance ($\AA$)",title = "Distance of the MD simulation between residues {}".format(" and ".join(str(index) for index in contact)),figure_name = "contact_{}".format("_".join(str(index) for index in contact)))
+
+    if angle is not None:        
+        Angles = average_property(Angles)
+        print("Angle: "+str(Angles.mean())+"(+-)"+str(Angles.std())+"\n")
+        save_pickle(pickle_name, "Angle", Angles, x_axis)
+        execute_plots(x_axis,Angles,"Time (ns)","Angle (deg)",title = "Angle of the MD simulation between atoms {}".format(" and ".join(str(index) for index in angle)),figure_name = "angle_{}".format("_".join(str(index) for index in angle)))
 
 
 
