@@ -158,11 +158,21 @@ class App:
 		Y_cname = ""
 		Z_column = askinteger("Column index of Z axis", "Enter the column index of the Z axis")
 		Z_cname = ""
+		if messagebox.askyesno("Do you want to perform a 3D scatter plot with a 4th metric in the colorbar"):
+			TDP = True
+			Z2_column = askinteger("Column index of Z2 axis", "Enter the column index of the Z2 axis")
+			Z2_cname = ""		
 		if messagebox.askyesno("Do you want to specify the names of the axis?"):
 			X_cname = askstring("Name of the X axis", "Enter the name of the X axis")
 			Y_cname = askstring("Name of the Y axis", "Enter the name of the Y axis")
 			Z_cname = askstring("Name of the Z axis", "Enter the name of the Z axis")
-		output = subprocess.check_output("python PELE_scripts/PELEPlot3.py -i {} -X {} {} -Y {} {} -Z {} {} -SP -S 16".format(Report_path,X_column,X_cname,Y_column,Y_cname,Z_column,Z_cname), shell = True)
+			Z2_cname = askstring("Name of the Z axis", "Enter the name of the Z2 axis")
+		if TDP:
+			output = subprocess.check_output("python PELE_scripts/PELEPlot3.py -i {} -X {} {} -Y {} {} -Z {} {} -Z2 {} {} -TP -S 16".format(Report_path,X_column,X_cname
+				,Y_column,Y_cname,Z_column,Z_cname,Z2_column,Z2_cname), shell = True)
+		else:
+			output = subprocess.check_output("python PELE_scripts/PELEPlot3.py -i {} -X {} {} -Y {} {} -Z {} {} -SP -S 16".format(Report_path,X_column,X_cname,Y_column,Y_cname
+				,Z_column,Z_cname), shell = True)
 		self.bl['text'] = output.strip()
 
 	def protein_mutate(self):
