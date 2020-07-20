@@ -166,7 +166,7 @@ class App:
 			X_cname = askstring("Name of the X axis", "Enter the name of the X axis")
 			Y_cname = askstring("Name of the Y axis", "Enter the name of the Y axis")
 			Z_cname = askstring("Name of the Z axis", "Enter the name of the Z axis")
-			Z2_cname = askstring("Name of the Z axis", "Enter the name of the Z2 axis")
+			Z2_cname = askstring("Name of the Z2 axis", "Enter the name of the Z2 axis")
 		if TDP:
 			output = subprocess.check_output("python PELE_scripts/PELEPlot3.py -i {} -X {} {} -Y {} {} -Z {} {} -Z2 {} {} -TP -S 16".format(Report_path,X_column,X_cname
 				,Y_column,Y_cname,Z_column,Z_cname,Z2_column,Z2_cname), shell = True)

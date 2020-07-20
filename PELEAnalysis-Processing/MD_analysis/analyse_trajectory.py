@@ -39,6 +39,7 @@ def parseArgs():
     parser.add_argument("-LR","--localrmsd",help="Compute the local RMSD between one reference and the trajectory",type=str,nargs='*')
     parser.add_argument("-D","--distance", type=int, help="Two atoms (number) to compute it distance along the trajectory",nargs=2)
     parser.add_argument("-CD","--catalytic_distance",help="Compute the distance against the catalytic residues",type=str,nargs='*')
+    parser.add_argument("-HIE","--epsilon_protonated",help="Use the ND1 atom name for Ser-His distance", action="store_true")
     parser.add_argument("-C", "--contact", type=int, help="Two residues (number of residues) to compute its contacts along the trajectory", nargs=2)
     parser.add_argument("-DIS", "--displacement", type=int, help="Atom pair for computing its displacements along the tractory", nargs=2)
     parser.add_argument("-G", "--gyration", help="Compute the gyration at each trajectory frame", action="store_true")
@@ -54,7 +55,7 @@ def parseArgs():
 
     args = parser.parse_args()
 
-    return args.traj, args.top, args.rmsd, args.rmsf, args.localrmsd, args.distance, args.catalytic_distance, args.contact, args.displacement, args.gyration , args.sasa, \
+    return args.traj, args.top, args.rmsd, args.rmsf, args.localrmsd, args.distance, args.catalytic_distance, args.epsilon_protonated, args.contact, args.displacement, args.gyration , args.sasa, \
            args.plot_style, args.plot, args.save_plot, args.time, args.acid, args.pickle_name, args.hbond, args.angle
 
 
@@ -85,7 +86,7 @@ def main():
         plot_object.box_plot()
         plot_object.density_plot()
 
-    tra, top, rmsd, rmsf, local_rmsd, distance, catalytic_distance, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time, acid, pickle_name, hbond, angle = parseArgs()
+    tra, top, rmsd, rmsf, local_rmsd, distance, catalytic_distance, epsilon_protonated, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time, acid, pickle_name, hbond, angle = parseArgs()
 
     traj = OpenFiles(tra, top)
     number_of_frames = 10000000
@@ -156,7 +157,10 @@ def main():
             if acid:
                 Asp_index_1=int(traj.topology.select("resSeq {} and name OD1 and protein".format(catalytic_distance[2])))
                 Asp_index_2=int(traj.topology.select("resSeq {} and name OD2 and protein".format(catalytic_distance[2])))
-                His_index=int(traj.topology.select("resSeq {} and name HD1 and protein".format(catalytic_distance[1])))
+                try:
+                    His_index=int(traj.topology.select("resSeq {} and name HD1 and protein".format(catalytic_distance[1])))
+                except:
+                    His_index=int(traj.topology.select("resSeq {} and name HE2 and protein".format(catalytic_distance[1])))
                 D1 = prop.compute_distance([[Asp_index_1,His_index]])
                 D2 = prop.compute_distance([[Asp_index_2,His_index]])
                 distances = []
@@ -166,7 +170,10 @@ def main():
 
             else:
                 Ser_index=int(traj.topology.select("resSeq {} and name HG and protein".format(catalytic_distance[0])))
-                His_index=int(traj.topology.select("resSeq {} and name NE2 and protein".format(catalytic_distance[1])))
+                if not epsilon_protonated:
+                    His_index=int(traj.topology.select("resSeq {} and name NE2 and protein".format(catalytic_distance[1])))
+                else:
+                    His_index=int(traj.topology.select("resSeq {} and name ND1 and protein".format(catalytic_distance[1])))
                 Distances.append(prop.compute_distance([[Ser_index,His_index]]))
 
         if angle is not None:
