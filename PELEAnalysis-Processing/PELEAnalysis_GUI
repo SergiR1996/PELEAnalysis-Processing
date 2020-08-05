@@ -90,8 +90,9 @@ class App:
 		HStop.title("PDB Processor"); HStop.geometry("400x400")
 		self.bl = Label(HStop, text='', font = "helvetica 10"); self.bl.pack()
 		b1 = Button(HStop, text = "Preprocess", command = self.ppp, font = "helvetica 12")
-		b2 = Button(HStop, text = "Quit", command = HStop.destroy, font = "helvetica 12")
-		b1.pack(); b2.pack()
+		b2 = Button(HStop, text = "PDBAverage", command =self.pAv, font = "helvetica 12")
+		b3 = Button(HStop, text = "Quit", command = HStop.destroy, font = "helvetica 12")
+		b1.pack(); b2.pack(); b3.pack()
 
 	def ppp(self):
 		Input_filename = askopenfilename(title="The input PDB file", filetypes=[("PDB file",".pdb")])
@@ -103,6 +104,25 @@ class App:
 			output = subprocess.check_output("python Preprocessing/PDBProcessor4PELE.py -i {} -O {} -RN {}".format(Input_filename, Output_filename,Residue_name_list), shell = True)
 		else:
 			output = subprocess.check_output("python Preprocessing/PDBProcessor4PELE.py -i {} -RN {}".format(Input_filename,Residue_name_list), shell = True)
+		self.bl['text'] = output.strip()
+
+	def pAv(self):
+		Input_filename = askopenfilename(title="The input PDB files (or trajectories)",
+			filetypes = [("PDB file",".pdb")])
+		Output_filename = askstring("The output filename", "Write down the output filename (Optional)")
+		BF = messagebox.askyesno("Do you want to calculate the B-factor for the average PDB file?")
+		if BF and Output_filename is not None:
+			output = subprocess.check_output("python Preprocessing/PDBAverage.py -i {} -o {} -B".format(
+				Input_filename, Output_filename), shell = True)
+		elif BF: 
+			output = subprocess.check_output("python Preprocessing/PDBAverage.py -i {} -B".format(
+				Input_filename), shell = True)
+		elif Output_filename is not None:
+			output = subprocess.check_output("python Preprocessing/PDBAverage.py -i {} -o {}".format(
+				Input_filename, Output_filename), shell = True)
+		else:
+			output = subprocess.check_output("python Preprocessing/PDBAverage.py -i {}".format(
+				Input_filename), shell = True)
 		self.bl['text'] = output.strip()
 
 	def PELE_scripting(self):

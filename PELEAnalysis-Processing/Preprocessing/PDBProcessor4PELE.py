@@ -5,6 +5,9 @@ import os,re
 import glob
 import argparse as ap
 
+# Local imports
+from StorePDBFilenames import *
+
 # Script information
 __author__ = "Sergi Rodà"
 __license__ = "MIT"
@@ -19,37 +22,6 @@ Protein_list = ["GLY","ALA","VAL","LEU","ILE","SER","THR","ARG","LYS","PHE","TYR
 """This program takes PDB files and
  process them to be able to be used
  in a PELE simulation"""
-
-def storePDBfilenames(PDBs_to_parse, parser):
-    """
-    It identifies the PDB files to add to the PDBProcessor4PELE tool
-
-    PARAMETERS
-    ----------
-    PDBs_to_parse : list of strings
-                       all the PDB files that want to be added to the analysis
-
-    RETURNS
-    -------
-    parsed_data : list of PDB filenames (strings)
-    """
-
-    PDBs = []
-
-    for PDB_list in PDBs_to_parse:
-        PDB_found = glob.glob(PDB_list)
-        if len(PDB_found) == 0:
-            print("Warning: path to PDB file \'" +
-                  "{}".format(PDB_list) + "\' not found.")
-        for PDB in PDB_found:
-            PDBs.append(PDB)
-
-    if len(PDBs) == 0:
-        print("Error: list of PDB files is empty.")
-        parser.print_help()
-        exit(1)
-
-    return PDBs
 
 def parseArgs():
     """
