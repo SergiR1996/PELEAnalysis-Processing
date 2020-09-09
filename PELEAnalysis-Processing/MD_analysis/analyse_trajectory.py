@@ -125,13 +125,13 @@ def main():
                 if elem==local_rmsd[0] and len(local_rmsd)==1:
                     Res_indices+="(resSeq {})".format(elem)
                 elif elem==local_rmsd[0] and len(local_rmsd)==2:
-                    Res_indices+="(resSeq {} or ".format(elem)
+                    Res_indices+="(resSeq {} ".format(elem)
                 elif elem==local_rmsd[0]:
                     Res_indices+="(resSeq {}".format(elem)
                 elif elem==local_rmsd[len(local_rmsd)-1]:
-                    Res_indices+="resSeq {})".format(elem)
+                    Res_indices+="or resSeq {})".format(elem)
                 else:
-                    Res_indices+=" or resSeq {} or ".format(elem)
+                    Res_indices+=" or resSeq {} ".format(elem)
 
             LRMSD.append(prop.traj_rmsd(traj,traj.topology.select(Res_indices+" and protein")))
 

@@ -83,11 +83,14 @@ def CalculateFreeEnergy(reports,output_path,metric,threshold):
     mean_G1 = n.mean(G1,axis=0); std_G1 = n.std(G1,axis=0)
     mean_G2 = n.mean(G2,axis=0); std_G2 = n.std(G2,axis=0)
     state_1 = len(G1) ; state_2 = len(G2)
+    rel1 = 100*state_1/(state_1+state_2); rel2 = 100*state_1/(state_1+state_2)
+    
+    print(mean_G1-mean_G2,rel1,rel2)
 
-    Results["mean,std, and frequency of state 1"] = (mean_G1, std_G1, state_1)
-    Results["mean,std, and frequency of state 2"] = (mean_G2, std_G2, state_2)
+    Results["mean,std, and frequency of state 1"] = (mean_G1, std_G1, state_1, rel1)
+    Results["mean,std, and frequency of state 2"] = (mean_G2, std_G2, state_2, rel2)
 
-    df = pd.DataFrame(Results, index = ["Mean", "Standard deviation", "Frequency"])
+    df = pd.DataFrame(Results, index = ["Mean", "Standard deviation", "Frequency","Relative_abundance"])
     df.to_csv(output_path+".csv")
 
 def main():

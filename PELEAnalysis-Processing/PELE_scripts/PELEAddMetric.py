@@ -2,7 +2,7 @@
 
 # Global imports
 from __future__ import unicode_literals
-import os
+import os,re
 import glob
 import math
 import argparse as ap
@@ -41,6 +41,8 @@ def parseArgs():
                           help="desired metric to calculate with the atom names (indicate with _)")
     required.add_argument("-RN", "--res_name", metavar="STRING", type=str,nargs='*',
                           help="name of the two residues involved in the distance metric to avoid confusions")
+    required.add_argument("-CH", "--chain_name", metavar="STRING", type=str,nargs='*',
+                          help="name of the chains where the two residues involved in the distance metric to avoid confusions")
     optional.add_argument("-CN","--column_name", metavar="STRING",type=str,
                           help="column name of the new metric", default="New_metric")
     optional.add_argument("-RF","--report_format", metavar="STRING",type=str,
@@ -50,11 +52,11 @@ def parseArgs():
     parser._action_groups.append(optional)
     args = parser.parse_args()
 
-    out_directory, residue, metric, res_name, column_name, report_format, trajectory_format = args.input, args.residue, args.metric, args.res_name, args.column_name, args.report_format, args.trajectory_format
+    out_directory, residue, metric, res_name, chain_name, column_name, report_format, trajectory_format = args.input, args.residue, args.metric, args.res_name, args.chain_name, args.column_name, args.report_format, args.trajectory_format
 
-    return out_directory, residue, metric, res_name, column_name, report_format, trajectory_format
+    return out_directory, residue, metric, res_name, chain_name, column_name, report_format, trajectory_format
 
-def AddMetric(out_directory, residue, metric, res_name, column_name, report_format, trajectory_format):
+def AddMetric(out_directory, residue, metric, res_name, chain_name, column_name, report_format, trajectory_format):
     """
     Take the PELE simulation trajectory files and returns the report files with the desired metric
 
@@ -67,11 +69,17 @@ def AddMetric(out_directory, residue, metric, res_name, column_name, report_form
 
         r = [atom2[0] - atom1[0], atom2[1] - atom1[1], atom2[2] - atom1[2]]
         return math.sqrt(r[0] ** 2 + r[1] ** 2 + r[2]**2)
+    
+    def atoi(text):
+        return int(text) if text.isdigit() else text
+    
+    def natural_keys(text):
+        return [atoi(c) for c in re.split(r'(\d+)', text)]
 
     trajectory_list = glob.glob(os.path.join(out_directory,trajectory_format))
     report_list = glob.glob(os.path.join(out_directory,report_format))
-    report_list.sort()
-    trajectory_list.sort()
+    report_list.sort(key=natural_keys)
+    trajectory_list.sort(key=natural_keys)
     metric_list = []
 
     for trajectory in trajectory_list:
@@ -79,7 +87,7 @@ def AddMetric(out_directory, residue, metric, res_name, column_name, report_form
             m_list,i = [],0
             for line in traj_file:
 
-                if (line[0:4] == "ATOM" or line[0:6] == "HETATM") and (line[22:26].strip() == residue[0] and line[12:16].replace(" ","_") == metric[0] and line[17:20] == res_name[0]) or (line[22:26].strip() == residue[1] and line[12:16].replace(" ","_") == metric[1] and line[17:20] == res_name[1]):
+                if (line[0:4] == "ATOM" or line[0:6] == "HETATM") and (line[22:26].strip() == residue[0] and line[12:16].replace(" ","_") == metric[0] and line[17:20] == res_name[0] and line[21:22] == chain_name[0]) or (line[22:26].strip() == residue[1] and line[12:16].replace(" ","_") == metric[1] and line[17:20] == res_name[1] and line[21:22] == chain_name[1]):
 
                     x = float(line[30:38].strip())
                     y = float(line[38:46].strip())
@@ -124,10 +132,10 @@ def main():
     """
 
     # Parse command-line arguments
-    out_directory, residue, metric, res_name, column_name, report_format, trajectory_format  = parseArgs()
+    out_directory, residue, metric, res_name, chain_name, column_name, report_format, trajectory_format  = parseArgs()
 
     # Add the desired metric to the report file
-    AddMetric(out_directory, residue, metric, res_name, column_name, report_format, trajectory_format)
+    AddMetric(out_directory, residue, metric, res_name, chain_name, column_name, report_format, trajectory_format)
 
 
 if __name__ == "__main__":
