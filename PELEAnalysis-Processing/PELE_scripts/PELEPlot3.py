@@ -9,6 +9,7 @@ import argparse as ap
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+import pandas as pd
 import matplotlib
 matplotlib.use("tkagg")
 import seaborn as sns
@@ -60,16 +61,22 @@ def parseArgs():
                   title of the generated figure
     font: list of strings
 		  key representing the font style in the font dictionary
+    color : string
+                  optional color to use for the figure
     size: integer
           The font size of all the labels in the plot
     scatterplot: boolean
           Perform the 2D scatter plot of two PELE metrics and a 3rd metric as colorbar (hover function)
+    twodensityplot: boolean
+          Perform the 2D density plot of two PELE metrics (with the points represented)
     densityplot: boolean
           Perform the density plot of one PELE metric
     pointplot: boolean
           Perform the 2D scatter plot of two PELE metrics and a 3rd metric as colorbar
     threeDscatterplot: boolean
           Perform the 3D scatter plot of three PELE metrics and a 4th metric as colorbar (hover function)
+    bestquantile : float
+          it sets the best quantile out of the data to be plotted
     """
 
     parser = ap.ArgumentParser(description='Script used to generate plots from the metrics \
@@ -102,16 +109,24 @@ def parseArgs():
 			  help = "title of the figure", default="")
     optional.add_argument("-F","--font", metavar="STRING [STRING]", type=str,nargs='*',
                           help = "a list of the name of the font of the axis and the title", default="")
+    optional.add_argument("-CO","--color", metavar="STRING", type=str,
+                          help = "The color that you want to apply to the plot (only use when no colorbar is used)", default="")
+    optional.add_argument("-CM","--colormap", metavar="STRING", type=str,
+                          help = "The color that you want to apply to the colorbar (only for SP and TP and must be matplotlib valid)", default="")
     optional.add_argument("-S","--size", metavar="INTEGER", type=int,
-                          help = "the size of the font for all the plot", default=12)
+                          help = "the size of the font for all the plot (only for SP, DP, PP, and TP)", default=12)
     optional.add_argument("-SP","--scatterplot"
                           ,help = "Perform the archetypical PELEPlot", action = "store_true")
+    optional.add_argument("-DDP","--twodensityplot"
+                          ,help = "Perform a 2D density plot of the two selected variables", action = "store_true")
     optional.add_argument("-DP","--densityplot"
                           ,help = "Perform the densityPlot of the metric specified in X", action = "store_true")
     optional.add_argument("-PP","--pointplot"
                           ,help = "Perform the pointPlot of the metric specified in X and Y", action = "store_true")
     optional.add_argument("-TP","--threeDscatterplot"
                           ,help = "Perform the 3D scatter plot of the metric specified in X, Y, and Z [and Z 2]", action = "store_true")
+    optional.add_argument("-BQ","--bestquantile", metavar="FLOAT", type=float
+                          ,help = "Take only the best quantile to plot (in DDP, DP, and PP)", default=None)
     parser._action_groups.append(optional)
     args = parser.parse_args()
 
@@ -137,13 +152,16 @@ def parseArgs():
     font=args.font
     if len(font)==0:
         font=["",""]
+    color = args.color; colormap = args.colormap
     size = args.size
     SP = args.scatterplot
+    DDP = args.twodensityplot
     DP = args.densityplot
     PP = args.pointplot
     TP = args.threeDscatterplot
+    BQ = args.bestquantile
 
-    return reports, x_data, y_data, z_data, z2_data, z_min, z_max, output_path, title, font, size, SP, DP, PP, TP
+    return reports, x_data, y_data, z_data, z2_data, z_min, z_max, output_path, title, font, color, colormap, size, SP, DDP, DP, PP, TP, BQ
 
 
 def addUnits(metric_name):
@@ -219,7 +237,7 @@ def parseAxisData(axis_data):
 def scatterPlot(reports,
                 x_rows = [None, ], y_rows = [None, ], z_rows = [None, ],
                 x_name = None, y_name = None, z_name = None,
-                output_path = None, z_max = None, z_min = None, title = "", font = ["",""], size=12):
+                output_path = None, z_max = None, z_min = None, title = "", font = ["",""], color = "", colormap = "", size=12):
     """Represent the scatter plot
 
     PARAMETERS
@@ -249,6 +267,8 @@ def scatterPlot(reports,
             it sets the minimum range value of the colorbar
     title: string
 	   it sets the title name of the plot
+    color : string
+              color to be used for the figure (when only 2 variables are used)
     size: integer
           The font size of all the labels in the plot
     """
@@ -323,7 +343,10 @@ def scatterPlot(reports,
     if z_min == z_max:
         cmap = plt.cm.autumn
     else:
-        cmap = plt.cm.plasma
+        if colormap!="":
+            cmap = plt.cm.get_cmap("{}".format(colormap))
+        else:
+            cmap = plt.cm.plasma
 
     norm = plt.Normalize(z_min, z_max)
 
@@ -334,9 +357,11 @@ def scatterPlot(reports,
     else:
         s = None
 
-
-    sc = plt.scatter(x_values, y_values, c=z_values, cmap=cmap, s=s,
-                        norm=norm)
+    if color!="" and (None in z_rows):
+        sc = plt.scatter(x_values, y_values, c=color, s=s)
+    else:
+        sc = plt.scatter(x_values, y_values, c=z_values, cmap=cmap, s=s,
+                            norm=norm)
 
     ax.margins(0.05)
     ax.set_facecolor('white')
@@ -370,8 +395,12 @@ def scatterPlot(reports,
         pos = sc.get_offsets()[ind["ind"][0]]
         annot.xy = pos
         annot.set_text(annotations[int(ind["ind"][0])])
-        annot.get_bbox_patch().set_facecolor(cmap(norm(
-            z_values[ind["ind"][0]])))
+        if color!="" and (None in z_rows):
+            annot.get_bbox_patch().set_facecolor(color)
+        else:
+            annot.get_bbox_patch().set_facecolor(cmap(norm(
+                z_values[ind["ind"][0]])))
+            
 
     def hover(event):
         """Action to perform when hovering the mouse on a point"""
@@ -396,7 +425,115 @@ def scatterPlot(reports,
     else:
         plt.show()
 
-def densityPlot(reports, x_rows = [None, ], x_name = None, title = "", size = 12):
+def TwoDensityPlot(reports,
+                x_rows = [None, ], y_rows = [None, ],
+                x_name = None, y_name = None,
+                output_path = None, title = "", font = ["",""], color = "", size=12, bestquantile = None):
+    """Represent the density plot between two variables
+
+    PARAMETERS
+    ----------
+    reports : string
+              list of report files to look for data
+    x_rows : list of integers
+             integers which specify the report columns to represent in the X
+             axis
+    y_rows : list of integers
+             integers which specify the report columns to represent in the Y
+             axis
+    z_rows : list of integers
+             integers which specify the report columns to represent in the
+             colorbar
+    x_name : string
+             label of the X axis
+    y_name : string
+             label of the Y axis
+    z_name : string
+             label of the colorbar
+    output_path : string
+                  output directory where the resulting plot will be saved
+    z_max : float
+            it sets the maximum range value of the colorbar
+    z_min : float
+            it sets the minimum range value of the colorbar
+    title: string
+       it sets the title name of the plot
+    color : string
+        color to be used for the figure
+    size: integer
+          The font size of all the labels in the plot
+    """
+
+    # The different variables are created and the size of the labels is 
+    x_values, y_values = [], []
+    plt.rcParams.update({'font.size': size})
+    # Set the rows and their labels to perform the scatter plot if they 
+    with open(reports[0], 'r') as report_file:
+        line = report_file.readline()
+        if None in x_rows:
+            x_rows = [7, ]
+            x_name = "RMSD ($\AA$)"
+        if None in y_rows:
+            y_rows = [5, ]
+            y_name = "Energy ($kcal/mol$)"
+        if x_name is None:
+            x_name = str(line.split("    ")[x_rows[0] - 1])
+        if y_name is None:
+            y_name = str(line.split("    ")[y_rows[0] - 1])
+    # Get the report files and save the directory where the report is saved and their number
+    for report in reports:
+        report_directory = os.path.dirname(report)
+        report_number = os.path.basename(report).split('_')[-1].split('.')[0]
+        
+        # Open the report file and save the valeus that will be represented in the 2D scatter plot
+        with open(report, 'r') as report_file:
+            next(report_file)
+            for i, line in enumerate(report_file):
+                x_total = 0.
+                y_total = 0.
+                for x_row in x_rows:
+                    x_total += float(line.split()[x_row - 1])
+                for y_row in y_rows:
+                    y_total += float(line.split()[y_row - 1])
+                if isnan(x_total) or isnan(y_total):
+                    continue
+                x_values.append(x_total)
+                y_values.append(y_total)
+
+    if color=="":
+        color = "blue"
+
+    # Get the best quantile out of the data according to the X axis to be plotted
+    if bestquantile is not None:
+        df = pd.DataFrame(list(zip(x_values,y_values)),columns=["X axis","Y axis"])
+        quantile_df = df[df["X axis"] < df["X axis"].quantile(bestquantile)]
+        x_values, y_values = quantile_df["X axis"].values,quantile_df["Y axis"].values
+
+    sns.set(rc={'figure.figsize':(11.7,8.27),"font.size":28,"axes.titlesize":20,"axes.labelsize":28, "xtick.labelsize":24,"ytick.labelsize":24},style="white")
+    plot = sns.JointGrid(x_values, y_values,space=0)
+    plot = plot.plot_joint(plt.scatter, edgecolor="k", c=color)
+    sns.scatterplot(x_values, y_values, color=color) 
+    sns.distplot(y_values, kde=True, ax=plot.ax_marg_y, vertical=True, color=color,axlabel=False)
+    sns.distplot(x_values, kde=True, ax=plot.ax_marg_x, color=color,axlabel=False)
+
+    if font[0]!="":
+        plt.ylabel(y_name,Dict_of_fonts[font[0]])
+        plt.xlabel(x_name,Dict_of_fonts[font[0]])
+    else:
+        plt.ylabel(y_name)
+        plt.xlabel(x_name)
+    if font[1]!="":
+        plt.title(title,Dict_of_fonts[font[1]])
+    else:
+        plt.title(title)
+
+    # Save or display the plot depending on whether an output path was set or not
+    if output_path is not None:
+        plt.savefig(output_path)
+    else:
+        plt.show()
+
+def densityPlot(reports, x_rows = [None, ], x_name = None, title = "", color = "", size = 12, bestquantile = None):
     """Represent the density plot
 
     PARAMETERS
@@ -412,6 +549,8 @@ def densityPlot(reports, x_rows = [None, ], x_name = None, title = "", size = 12
        it sets the title name of the plot
     size: integer
           The font size of all the labels in the plot
+    color : string
+              color to be used for the figure
     """
     
     x_values = []
@@ -427,15 +566,23 @@ def densityPlot(reports, x_rows = [None, ], x_name = None, title = "", size = 12
                 pass
             i+=1
 
-    sns.distplot(x_values)
+    if color=="":
+        color = "blue"
+
+        # Get the best quantile out of the data according to the X axis to be plotted
+    if bestquantile is not None:
+        df = pd.DataFrame(list(x_values),columns=["X axis"])
+        quantile_df = df[df["X axis"] < df["X axis"].quantile(bestquantile)]
+        x_values = quantile_df["X axis"].values
+
+    sns.distplot(x_values, color=color)
     plt.title(title)
     plt.xlabel(x_name)
     if x_name !=None:
         plt.ylabel("Density (1/{})".format(x_name.split("(")[1][0:-1]))
     plt.show()
 
-    
-def pointPlot(reports, x_rows = [None, ], x_name = None, y_rows = [None, ], y_name = None, title = "", size = 12):
+def pointPlot(reports, x_rows = [None, ], x_name = None, y_rows = [None, ], y_name = None, title = "", color = "", size = 12, bestquantile = None):
     """Represent the scatter point plot
 
     PARAMETERS
@@ -454,6 +601,8 @@ def pointPlot(reports, x_rows = [None, ], x_name = None, y_rows = [None, ], y_na
              label of the Y axis
     title: string
        it sets the title name of the plot
+    color : string
+              color to be used for the figure
     size: integer
           The font size of all the labels in the plot
     """    
@@ -471,8 +620,17 @@ def pointPlot(reports, x_rows = [None, ], x_name = None, y_rows = [None, ], y_na
             else:
                 pass
             i+=1
-            
-    plt.scatter(x_values,y_values)
+
+    # Get the best quantile out of the data according to the X axis to be plotted
+    if bestquantile is not None:
+        df = pd.DataFrame(list(zip(x_values,y_values)),columns=["X axis","Y axis"])
+        quantile_df = df[df["X axis"] < df["X axis"].quantile(bestquantile)]
+        x_values, y_values = quantile_df["X axis"].values,quantile_df["Y axis"].values    
+
+    if color=="":
+        color="blue"
+
+    plt.scatter(x_values,y_values,c=color)
     plt.title(title)
     plt.xlabel(x_name)
     plt.ylabel(y_name)
@@ -480,7 +638,7 @@ def pointPlot(reports, x_rows = [None, ], x_name = None, y_rows = [None, ], y_na
 
 def ThreeDPlot(reports, x_rows = [None, ], x_name = None, y_rows = [None, ], y_name = None,
     z_rows = [None, ], z_name = None, z2_rows = [None, ], z2_name = None,
-    z_max = None, z_min = None, output_path = None, title = "", font = ["",""], size = 12):
+    z_max = None, z_min = None, output_path = None, title = "", font = ["",""], color = "", colormap = "", size = 12):
     """Represent the 3D scatter plot of some PELE metrics
 
     PARAMETERS
@@ -514,6 +672,8 @@ def ThreeDPlot(reports, x_rows = [None, ], x_name = None, y_rows = [None, ], y_n
             it sets the minimum range value of the colorbar
     title: string
        it sets the title name of the plot
+    color : string
+              color to be used for the figure (when only 3 variables are used)
     size: integer
           The font size of all the labels in the plot
     """
@@ -598,14 +758,20 @@ def ThreeDPlot(reports, x_rows = [None, ], x_name = None, y_rows = [None, ], y_n
     if z_min == z_max:
         cmap = plt.cm.autumn
     else:
-        cmap = plt.cm.plasma
+        if colormap!="":
+            cmap = plt.cm.get_cmap("{}".format(colormap))
+        else:
+            cmap = plt.cm.plasma
 
     norm = plt.Normalize(z_min, z_max)
 
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d') 
-    sc = ax.scatter(x_values, y_values, z_values, c=z2_values, cmap=cmap,
-                        norm=norm)
+    ax = fig.add_subplot(111, projection='3d')
+    if color!="" and (None in z2_rows):
+        sc = ax.scatter(x_values, y_values, z_values, c=color)
+    else:
+        sc = ax.scatter(x_values, y_values, z_values, c=z2_values, cmap=cmap,
+                            norm=norm)
 
     ax.margins(0.05)
     ax.set_facecolor('white')
@@ -641,8 +807,11 @@ def ThreeDPlot(reports, x_rows = [None, ], x_name = None, y_rows = [None, ], y_n
         pos = sc.get_offsets()[ind["ind"][0]]
         annot.xy = pos
         annot.set_text(annotations[int(ind["ind"][0])])
-        annot.get_bbox_patch().set_facecolor(cmap(norm(
-            z2_values[ind["ind"][0]])))
+        if color!="" and (None in z2_rows):
+            annot.get_bbox_patch().set_facecolor(color)
+        else:
+            annot.get_bbox_patch().set_facecolor(cmap(norm(
+                z_values[ind["ind"][0]])))
 
     def hover(event):
         """Action to perform when hovering the mouse on a point"""
@@ -674,7 +843,7 @@ def main():
     """
 
     # Parse command-line arguments
-    reports, x_data, y_data, z_data, z2_data, z_min, z_max, output_path, title, font, size, SP, DP, PP, TP = parseArgs()
+    reports, x_data, y_data, z_data, z2_data, z_min, z_max, output_path, title, font, color, colormap, size, SP, DDP, DP, PP, TP, BQ = parseArgs()
 
     # Parse axis data to label it properly
     x_rows, x_name = parseAxisData(x_data)
@@ -688,19 +857,24 @@ def main():
                     x_rows=x_rows, y_rows=y_rows, z_rows=z_rows,
                     x_name=x_name, y_name=y_name, z_name=z_name,
                     z_min=z_min, z_max=z_max,
-                    output_path=output_path,title=title,font=font,size=size)
+                    output_path=output_path,title=title,font=font,color=color,colormap=colormap,size=size)
+    if DDP:
+        TwoDensityPlot(reports,
+                    x_rows=x_rows, y_rows=y_rows,
+                    x_name=x_name, y_name=y_name,
+                    output_path=output_path,title=title,font=font,color=color,size=size,bestquantile=BQ)
     if DP:
         densityPlot(reports,
-                    x_rows=x_rows,x_name=x_name,title=title,size=size)
+                    x_rows=x_rows,x_name=x_name,title=title,color=color,size=size,bestquantile=BQ)
     if PP:
         pointPlot(reports,
-                  x_rows=x_rows, y_rows=y_rows,x_name=x_name,y_name=y_name,title=title,size=size)
+                  x_rows=x_rows, y_rows=y_rows,x_name=x_name,y_name=y_name,title=title,color=color,size=size,bestquantile=BQ)
     if TP:
         ThreeDPlot(reports,
                     x_rows=x_rows, y_rows=y_rows, z_rows=z_rows, z2_rows=z2_rows,
                     x_name=x_name, y_name=y_name, z_name=z_name, z2_name=z2_name,
                     z_min=z_min, z_max=z_max,
-                    output_path=output_path,title=title,font=font,size=size)
+                    output_path=output_path,title=title,font=font,color=color,colormap=colormap,size=size)
 
 
 if __name__ == "__main__":

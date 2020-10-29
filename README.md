@@ -60,17 +60,18 @@ TGRLKLRKD-E
 
 <b> Plot metrics from PELE report files </b>
 
-The i (input) flag is to state the path of the report files, and the X and Z flags are to store the metrics from the report files for the X and Y axis, respectively. The SP flag is to create the ScatterPlot, as other type of plots can be created.
+The i (input) flag is to state the path of the report files, and the X, Y, and Z flags are to store the metrics from the report files for the X, Y, and Z axis, respectively. The Z2 flag represents the 4th axis corresponding to the colorbar. After specifying the column where the metric resides in the report files, a title referring to each metric can be added to the plot. The TP flag is to create the ThreeDPlot, as other type of plots can be created. The CM flag can be used to change the default colormap used in the colorbar (plasma) of the plot. Finally, the S flag is used to specify the overall size of all the string elements in the plot.
 
 ```
-python PELEPlot3.py -i *.out -X 7 -Y 5 -SP
+python PELEPlot3.py -i *.out -X 7 "Distance 1" -Y 5 "Interaction Energy" -Z 6 "Distance 2"
+-Z2 8 "Distance 3" -TP -CM RdYlGn -S 12
 ```
 
-The output plot will be the next (also, the point can be hovered to see from trajectories comes from and which accepted PELE step represents):
+The output plot will be the next (also, the points can be hovered to see from which trajectories they come from and which accepted PELE steps they represent):
 
 ![Alt text](PELEAnalysis-Processing/PELE_scripts/PELEPlot.png)
 
-
+To get more information on how this script or other ones work, use the h flag to get the help message.
 
 ## Development
 
