@@ -811,7 +811,7 @@ def ThreeDPlot(reports, x_rows = [None, ], x_name = None, y_rows = [None, ], y_n
             annot.get_bbox_patch().set_facecolor(color)
         else:
             annot.get_bbox_patch().set_facecolor(cmap(norm(
-                z_values[ind["ind"][0]])))
+                z2_values[ind["ind"][0]])))
 
     def hover(event):
         """Action to perform when hovering the mouse on a point"""
