@@ -25,7 +25,7 @@ A set of Python libraries are necessary to run the scripts of this Git repositor
 
 * <b> PELE\_mean\_analysis </b>: Folder with R tools to analyze PELE report files.
 
-* <b> PELE\_scripts </b>: Folder with the tools to analyze a PELE simulation and their report files.
+* <b> PELE\_scripts </b>: Folder with the tools to analyze a PELE simulation and their report and trajectory files.
 
 * <b> Preprocessing </b>: Folder with the python scripts to prepare the PDB file for the PELE simulation, to generate the force field parameters for the ligands and the unknown/unseen molecules of the PELE software. [OPLS-2005](https://en.wikipedia.org/wiki/OPLS) is the used force-field.
 
