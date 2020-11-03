@@ -136,7 +136,10 @@ def PDB_processing(PDB_filename, Output, Residue_name):
                 elif line[17:20].strip() =="HOH" and water_j == 1:
                     PDB_modified.write(line[0:12]+"1HW  HOH W{:>4}".format(water_i)+line[26:])
                 else:
-                    PDB_modified.write(line)
+                    if line[12:16] == " HXT":
+                        PDB_modified.write(line[0:12]+" OXT"+line[16:77]+"O1-\n")
+                    else:
+                        PDB_modified.write(line)
         else:
             pass
 
