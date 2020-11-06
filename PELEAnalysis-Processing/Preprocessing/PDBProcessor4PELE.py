@@ -68,6 +68,7 @@ def PDB_processing(PDB_filename, Output, Residue_name):
     """
 
     Non_aminoacid_dict, L_number = {},0
+    HXT_terminal, Gly_to_other_residue, ASH_list, GLH_list = False, False, False, False
 
     # Depending on if a output filename is specified on the command line or not, the writable files will be different.
     if Output != "":
@@ -136,9 +137,35 @@ def PDB_processing(PDB_filename, Output, Residue_name):
                 elif line[17:20].strip() =="HOH" and water_j == 1:
                     PDB_modified.write(line[0:12]+"1HW  HOH W{:>4}".format(water_i)+line[26:])
                 else:
+                    # Conditional statement used when C-ter residue contains the HXT atom name and type automatically given by Maestro/Schrödinger
                     if line[12:16] == " HXT":
+                        print(line)
                         PDB_modified.write(line[0:12]+" OXT"+line[16:77]+"O1-\n")
+                        HXT_terminal = True
+                    # Conditional statement used when residues are mutated from Gly to another thing with Maestro/Schrödinger
+                    elif line[12:16] == " HA2" and line[17:20] != "GLY":
+                        PDB_modified.write(line[0:12]+" HA "+line[16:])
+                        if Gly_to_other_residue == False:
+                            Gly_to_other_residue = list()
+                        if line[22:26].strip() not in Gly_to_other_residue:
+                            Gly_to_other_residue.append(line[22:26].strip())
+                    # Conditional statement used when Asp residue is protonated in the carboxyl group
+                    elif line[12:16] == " HD2" and line[17:20] == "ASP":
+                        PDB_modified.write(line[0:17]+"ASH"+line[20:])
+                        if ASH_list == False:
+                            ASH_list = list()
+                        if line[22:26].strip() not in ASH_list:
+                            ASH_list.append(line[22:26].strip())
+                    # Conditional statement used when Glu residue is protonated in the carboxyl group
+                    elif line[12:16] == " HE2" and line[17:20] == "GLU":
+                        PDB_modified.write(line[0:17]+"GLH"+line[20:])
+                        if GLH_list == False:
+                            GLH_list = list()
+                        if line[22:26].strip() not in GLH_list:
+                            GLH_list.append(line[22:26].strip())
                     else:
+                        if HXT_terminal == True:
+                            print(line)
                         PDB_modified.write(line)
         else:
             pass
@@ -148,9 +175,9 @@ def PDB_processing(PDB_filename, Output, Residue_name):
     PDB_modified.close()
     PDB_original.close()
 
-    return water_i, Non_aminoacid_dict
+    return water_i, Non_aminoacid_dict, HXT_terminal, Gly_to_other_residue, ASH_list, GLH_list
 
-def Printing_summary(PDB_filename, Output, water_i, Non_aminoacid_dict):
+def Printing_summary(PDB_filename, Output, water_i, Non_aminoacid_dict, HXT_terminal, Gly_to_other_residue, ASH_list, GLH_list):
     """
     Prints a summary of the processing of the PDB file prior to the PELE
     simulation. It includes the number of water molecules found and the 
@@ -165,7 +192,15 @@ def Printing_summary(PDB_filename, Output, water_i, Non_aminoacid_dict):
     water_i : integer
                       number of water molecules found in the PDB input file
     Non_aminoacid_dict : dictionary
-                      dicitonary with the key:item pair being the unconventional AA and the number of instances                
+                      dicitonary with the key:item pair being the unconventional AA and the number of instances
+    HXT_terminal : boolean
+                      The HXT atom name is present in the C-terminal residue of the protein chain/s (when True)
+    Gly_to_other_residue : boolean / list
+                      The list of new residues mutated have the HA2 atom name to the HA atom name due to the previous Gly residue (when True)
+    ASH_list : boolean / list
+                      The list of ASH residues (ASP with HD2) in the protein chain/s (when True)
+    GLH_list : boolean / list
+                      The list of GLH residues (GLU with HD2) in the protein chain/s (when True)     
 
     RETURNS
     -------
@@ -177,28 +212,28 @@ def Printing_summary(PDB_filename, Output, water_i, Non_aminoacid_dict):
     # Depending on if a output filename is specified on the command line or not, the input PDB file will be preserved or overwritten.
     if Output != "":
         print("\n{} has been succesfully processed and written to {}.pdb\n\n".format(PDB_filename, Output) + "-"*Screen_ticks + "SUMMARY" + "-"*Screen_ticks)
-        if water_i == 0:
-            print("\nNo water molecules were found in the PDB file")
-        elif water_i == 1:
-            print("\n{} water molecule was found in the PDB file".format(water_i))
-        else:
-            print("\n{} water molecules were found in the PDB file".format(water_i))
-        if Non_aminoacid_dict != {}:
-            print("\nThe following ligands and cofactors were found in the PDB file\n")
-            for ligand in Non_aminoacid_dict.keys():
-                print(ligand + ": " + str(Non_aminoacid_dict[ligand]) + " molecule/s\n")
-
     else:
         os.system("rm {}" .format(PDB_filename))
         os.system("mv {}_modified.pdb {}" .format(PDB_filename[:-4], PDB_filename))
         print("\n{} has been succesfully processed and overwritten\n\n" .format(PDB_filename) + "-"*Screen_ticks + "SUMMARY" + "-"*Screen_ticks)
-        print("\n{} water molecules were found in the PDB file" .format(water_i))
-        if Non_aminoacid_dict != {}:
-            print("\nThe following ligands and cofactors were found in the PDB file\n")
-            for ligand in Non_aminoacid_dict.keys():
-                print(ligand + ": " + str(Non_aminoacid_dict[ligand]) + " molecule/s\n")
-
-
+    if water_i == 0:
+        print("\nNo water molecules were found in the PDB file")
+    elif water_i == 1:
+        print("\n{} water molecule was found in the PDB file".format(water_i))
+    else:
+        print("\n{} water molecules were found in the PDB file".format(water_i))
+    if HXT_terminal:
+        print("\nThe C-terminal residue contained the HXT atom name automatically put by Maestro/Schrödinger. Be aware! (Modified by the code)")
+    if Gly_to_other_residue:
+        print("\nThe following residues contained the typical HA2 atom name from a GLY residue but were another residue: {}. (Modified by the code)".format(Gly_to_other_residue))
+    if ASH_list:
+        print("\nThe following residues are really ASH residues: {}. (Modified manually by the user)".format(ASH_list))
+    if GLH_list:
+        print("\nThe following residues are really GLH residues: {}. (Modified manually by the user)".format(GLH_list))
+    if Non_aminoacid_dict != {}:
+        print("\nThe following ligands and cofactors were found in the PDB file\n")
+        for ligand in Non_aminoacid_dict.keys():
+            print(ligand + ": " + str(Non_aminoacid_dict[ligand]) + " molecule/s\n")
 
 def main():
     """
@@ -210,8 +245,8 @@ def main():
     PDBs, Output, Residue_name = parseArgs()
 
     for PDB_filename in PDBs:
-        water_i, Non_aminoacid_dict = PDB_processing(PDB_filename, Output, Residue_name)
-        Printing_summary(PDB_filename, Output, water_i, Non_aminoacid_dict)
+        water_i, Non_aminoacid_dict, HXT_terminal, Gly_to_other_residue, ASH_list, GLH_list = PDB_processing(PDB_filename, Output, Residue_name)
+        Printing_summary(PDB_filename, Output, water_i, Non_aminoacid_dict, HXT_terminal, Gly_to_other_residue, ASH_list, GLH_list)
 
 if __name__ == "__main__":
     """Call the main function"""
