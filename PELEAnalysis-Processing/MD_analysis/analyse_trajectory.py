@@ -155,8 +155,12 @@ def main():
         if catalytic_distance is not None:
 
             if acid:
-                Asp_index_1=int(traj.topology.select("resSeq {} and name OD1 and protein".format(catalytic_distance[2])))
-                Asp_index_2=int(traj.topology.select("resSeq {} and name OD2 and protein".format(catalytic_distance[2])))
+                try:
+                    Asp_index_1=int(traj.topology.select("resSeq {} and name OD1 and protein".format(catalytic_distance[2])))
+                    Asp_index_2=int(traj.topology.select("resSeq {} and name OD2 and protein".format(catalytic_distance[2])))
+                except:
+                    Asp_index_1=int(traj.topology.select("resSeq {} and name OE1 and protein".format(catalytic_distance[2])))
+                    Asp_index_2=int(traj.topology.select("resSeq {} and name OE2 and protein".format(catalytic_distance[2])))
                 try:
                     His_index=int(traj.topology.select("resSeq {} and name HD1 and protein".format(catalytic_distance[1])))
                 except:
