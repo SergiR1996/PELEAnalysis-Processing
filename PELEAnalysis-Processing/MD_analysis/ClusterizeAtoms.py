@@ -64,9 +64,7 @@ def parseArgs():
 	parser._action_groups.append(optional)
 	args = parser.parse_args()
 
-	traj, top, reference, n_processors, cluster_width, atom_ref_ids, atom_sim_ids, atom_name, output = args.traj, args.top, args.reference, args.n_processors, args.cluster_width, args.ref_atoms, args.sim_atoms, args.atom_name, args.output
-
-	return traj, top, reference, n_processors, cluster_width, atom_ref_ids, atom_sim_ids, atom_name, output
+	return args.traj, args.top, args.reference, args.n_processors, args.cluster_width, args.ref_atoms, args.sim_atoms, args.atom_name, args.output
 
 def GetCoordinates(file,atom_ref_ids, atom_name):
 	"""
@@ -76,6 +74,11 @@ def GetCoordinates(file,atom_ref_ids, atom_name):
 	----------
 	file : string
 			PDB filename
+
+	atom_ref_ids : list of strings
+					the residue number of the reference atoms
+	atom_name : string
+					the PDB atom name of the reference PDB file
 
 	RETURNS
 	------

@@ -139,7 +139,7 @@ def PDB_processing(PDB_filename, Output, Residue_name):
                 else:
                     # Conditional statement used when C-ter residue contains the HXT atom name and type automatically given by Maestro/Schrödinger
                     if line[12:16] == " HXT":
-                        print(line)
+                        #print(line)
                         PDB_modified.write(line[0:12]+" OXT"+line[16:77]+"O1-\n")
                         HXT_terminal = True
                     # Conditional statement used when residues are mutated from Gly to another thing with Maestro/Schrödinger
