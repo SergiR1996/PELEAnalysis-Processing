@@ -128,7 +128,10 @@ def AddMetric(out_directory, residue, metric, res_name, chain_name, column_name,
                 if i==0:
                     out_report.write(line.strip("\n")+'    '+column_name+"\n")
                 else:
-                    out_report.write(line.strip("\n")+'    '+str(metric_list[j][i-1][0])+"\n")
+                    if ".xtc" in trajectory:
+                        out_report.write(line.strip("\n")+'    '+str(metric_list[j][i-1][0])+"\n")
+                    else:
+                        out_report.write(line.strip("\n")+'    '+str(metric_list[j][i-1])+"\n")
     
     print("{} report files have the desired metric added".format(j+1))
 
