@@ -1,47 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="66e56163-dd1b-4986-8e1b-d4b093190594" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ActiveSiteFinder.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PELEAnalysis-Processing.Rproj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PELEBestTrajectories.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PELEPlot2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PELEPlot3.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PELEStoreResults.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PELE_mean_analysis.R" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PETase_Manuel_2HEMHET_D238SL272D.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProteinPreparationSystem.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ReactiveCFinder.py" beforeDir="false" />
-    </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <list default="true" id="66e56163-dd1b-4986-8e1b-d4b093190594" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Esterases/ProteinPreparationSystem_Parallelization.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1062" />
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Esterases/ActiveSiteFinder.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-437" />
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Esterases/ProteinPreparationSystem.py">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-    </leaf>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -72,6 +36,7 @@
     <option name="width" value="1189" />
     <option name="height" value="922" />
   </component>
+  <component name="ProjectId" id="1qwP68cOISurV3IZ7Bszdwk9YZ3" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -96,22 +61,17 @@
       <pane id="Scope" />
     </panes>
   </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$USER_HOME$/PycharmProjects/ActiveSiteFinder" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
-  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
