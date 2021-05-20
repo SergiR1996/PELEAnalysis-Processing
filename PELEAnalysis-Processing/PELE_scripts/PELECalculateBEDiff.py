@@ -83,7 +83,7 @@ def CalculateFreeEnergy(reports,output_path,metric,threshold):
     mean_G1 = n.mean(G1,axis=0); std_G1 = n.std(G1,axis=0)
     mean_G2 = n.mean(G2,axis=0); std_G2 = n.std(G2,axis=0)
     state_1 = len(G1) ; state_2 = len(G2)
-    rel1 = 100*state_1/(state_1+state_2); rel2 = 100*state_1/(state_1+state_2)
+    rel1 = 100*state_1/(state_1+state_2); rel2 = 100*state_2/(state_1+state_2)
     
     print(mean_G1-mean_G2,rel1,rel2)
 
