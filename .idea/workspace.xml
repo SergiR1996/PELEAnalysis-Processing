@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="66e56163-dd1b-4986-8e1b-d4b093190594" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PELEAnalysis-Processing/PELEAnalysis_GUI" beforeDir="false" afterPath="$PROJECT_DIR$/PELEAnalysis-Processing/PELEAnalysis_GUI" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -92,7 +93,14 @@
       <option name="project" value="LOCAL" />
       <updated>1620404887146</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Added PELEAnalyzer Python script, which aims to combine the different Python scripts to perform several analysis into a one summarized script. Likewise, new features have been added and some of the jobs have been parallelized.">
+      <created>1621520823889</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1621520823890</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -122,7 +130,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="&quot;Added PELEAnalyzer Python script, which aims to combine the different Python scripts to perform several analysis into a one summarized script. Likewise, new features have been added and some of the jobs have been parallelized.&quot;" />
-    <option name="LAST_COMMIT_MESSAGE" value="&quot;Added PELEAnalyzer Python script, which aims to combine the different Python scripts to perform several analysis into a one summarized script. Likewise, new features have been added and some of the jobs have been parallelized.&quot;" />
+    <MESSAGE value="Added PELEAnalyzer Python script, which aims to combine the different Python scripts to perform several analysis into a one summarized script. Likewise, new features have been added and some of the jobs have been parallelized." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added PELEAnalyzer Python script, which aims to combine the different Python scripts to perform several analysis into a one summarized script. Likewise, new features have been added and some of the jobs have been parallelized." />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/PETase_Manuel_2HEMHET_D238SL272D.csv" />
