@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="66e56163-dd1b-4986-8e1b-d4b093190594" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PELEAnalysis-Processing/PELEAnalysis_GUI" beforeDir="false" afterPath="$PROJECT_DIR$/PELEAnalysis-Processing/PELEAnalysis_GUI" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -100,7 +99,14 @@
       <option name="project" value="LOCAL" />
       <updated>1621520823890</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Updated PELEAddMetric Python script which enables the measurement of distances, angles, and dihedrals on trajectories of PELE simulations (both in pdb and xtc format). Also, the code has been parallelized to make the calculus faster.">
+      <created>1622013765702</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1622013765702</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -131,7 +137,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="&quot;Added PELEAnalyzer Python script, which aims to combine the different Python scripts to perform several analysis into a one summarized script. Likewise, new features have been added and some of the jobs have been parallelized.&quot;" />
     <MESSAGE value="Added PELEAnalyzer Python script, which aims to combine the different Python scripts to perform several analysis into a one summarized script. Likewise, new features have been added and some of the jobs have been parallelized." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added PELEAnalyzer Python script, which aims to combine the different Python scripts to perform several analysis into a one summarized script. Likewise, new features have been added and some of the jobs have been parallelized." />
+    <MESSAGE value="Updated PELEAddMetric Python script which enables the measurement of distances, angles, and dihedrals on trajectories of PELE simulations (both in pdb and xtc format). Also, the code has been parallelized to make the calculus faster." />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated PELEAddMetric Python script which enables the measurement of distances, angles, and dihedrals on trajectories of PELE simulations (both in pdb and xtc format). Also, the code has been parallelized to make the calculus faster." />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/PETase_Manuel_2HEMHET_D238SL272D.csv" />

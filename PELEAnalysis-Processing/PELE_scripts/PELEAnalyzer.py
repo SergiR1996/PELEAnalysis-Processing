@@ -155,6 +155,7 @@ class PELEAnalyzer():
         values_aux, cat_events, cat_trajectories = [], [], []
 
         rep = pd.read_csv(report,sep="    ")
+        rep.dropna(axis=1,inplace=True)
         values_aux.append(rep.values.tolist())
         for i in range(self.n_of_ester_groups):
             if self.add_histidine:
@@ -217,6 +218,7 @@ class PELEAnalyzer():
         G1, G2 = [],[]
 
         rep = pd.read_csv(report,sep="    ")
+        rep.dropna(axis=1,inplace=True)
         for i_row in range(rep.shape[0]):
           if rep.loc[i_row][self.column_number]<=self.threshold:
             G1.append(rep.loc[i_row][4])
@@ -242,6 +244,7 @@ class PELEAnalyzer():
         inside_bool, instances, entrance,total_steps = False,[],0,0
 
         rep = pd.read_csv(report,sep="    ")
+        rep.dropna(axis=1,inplace=True)
         step_in,i_aux,entrance_aux,instances_aux = 0,0,0,0
         for i_row in range(1,rep.shape[0]):
             if rep.loc[i_row][self.column_number] < self.threshold and inside_bool == False and i_row != (rep.shape[0]-1):
@@ -352,6 +355,7 @@ class PELEAnalyzer():
         values = self.DecompressList(values)
 
         report = pd.read_csv(self.reports[0],sep="    ")
+        report.dropna(axis=1,inplace=True)
         column_names = list(report.columns[3:])
 
         if self.perform_plots: self.CATE_plot(values,column_names)
@@ -408,6 +412,7 @@ class PELEAnalyzer():
         if self.perform_plots:
             G_names = ["State 1" for i in G1_values]+["State 2" for i in G2_values]
             G_val_grouped = G1_values + G2_values
+            print(len(G_names),len(G_val_grouped))
             if self.violin_plots:
                 sns.violinplot(G_names, G_val_grouped, flierprops={"marker":"o", "markerfacecolor":"darkgrey", "markeredgecolor":"k", "markersize":10})
             else:
