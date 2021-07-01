@@ -221,6 +221,7 @@ class PELEAnalyzer():
         rep.dropna(axis=1,inplace=True)
         for i_row in range(rep.shape[0]):
           if rep.loc[i_row][self.column_number]<=self.threshold:
+#          if rep.loc[i_row][self.column_number]<=self.threshold and rep.loc[i_row][5]<=0.2:
             G1.append(rep.loc[i_row][4])
           else:
             G2.append(rep.loc[i_row][4])
@@ -241,7 +242,7 @@ class PELEAnalyzer():
                       Number of entrances        
         """
 
-        inside_bool, instances, entrance,total_steps = False,[],0,0
+        inside_bool, instances, entrance = False,[],0
 
         rep = pd.read_csv(report,sep="    ")
         rep.dropna(axis=1,inplace=True)
@@ -286,7 +287,7 @@ class PELEAnalyzer():
                 inside_bool = False
         entrance+=entrance_aux
         inside_bool = False
-        total_steps += rep.loc[rep.shape[0]-1][1]
+#        total_steps += rep.loc[rep.shape[0]-1][1]
 
         return instances, entrance
 
@@ -455,7 +456,8 @@ class PELEAnalyzer():
             inf_NI = open("{}_NI.pkl".format(self.output_path), "wb"); pickle.dump(instances, inf_NI); pickle.dump(["Residence time" for i in instances], inf_NI); inf_NI.close()
 
         output_file = open("{}.txt".format(self.output_path),"wt")
-        output_file.write("Number of inside steps: {}\n".format(len(instances)))
+        output_file.write("Number of inside steps: {}\n".format(n.sum(instances)))
+        output_file.write("Inside events: {}\n".format(len(instances)))
         output_file.write("Residence time: {}\n".format(n.mean(instances,axis=0)))
         output_file.write("Relative residence time: {}\n".format((100*n.mean(instances,axis=0))/(self.num_steps)))
         output_file.write("Number of entrances: {}\n".format(entrance))
