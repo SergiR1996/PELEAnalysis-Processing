@@ -227,6 +227,23 @@ class PELEAnalyzer():
             G2.append(rep.loc[i_row][4])
 
         return G1, G2
+
+    def EstimateEnantioselectivity(self, report):
+        """
+        Take the PELE simulation report files and filters the number of steps with 
+        a distance (metric) smaller than a certain threshold
+
+        RETURNS
+        -------
+        Rep: pandas DataFrame
+                      Report file with the steps that have the metric below the threshold  
+        """
+
+        rep = pd.read_csv(report, sep="    ")
+        rep.dropna(axis=1,inplace=True)
+        Rep = rep[rep[rep.columns[self.column_number]] <= self.threshold]
+
+        return [i for i in zip(Rep["Binding Energy"],Rep["dihedral"])]
           
     def Time_of_residence_and_number_of_entrances(self, report):
         """
@@ -425,6 +442,42 @@ class PELEAnalyzer():
         df = pd.DataFrame(Results, index = ["Mean", "Standard deviation", "Frequency","Relative_abundance"])
         df.to_csv(self.output_path+".csv")
 
+    def EE(self):
+        """
+        Function to calculate the number of ocurrences of pro-R and pro-S poses of the substrate
+        in the active site
+
+        It is called when this script is the main program called by the interpreter
+        """
+        List_of_reports, R, S, Ambiguous = [], [], [], []
+
+        pool = mp.Pool(self.n_processors)
+        List_of_reports.append(pool.map(self.EstimateEnantioselectivity,self.reports))
+        pool.terminate()
+
+        List_of_reports = self.DecompressList(List_of_reports)
+        List_of_reports = self.DecompressList(List_of_reports)
+
+        List_of_reports.sort(key=lambda x: x[0])
+
+        Top_IE_values = List_of_reports[0:self.window_size]
+
+        for energy, dihedral_value in Top_IE_values:
+            if dihedral_value <= -40 and dihedral_value >= -140:
+                R.append(dihedral_value)
+            elif dihedral_value <= 140 and dihedral_value >= 40:
+                S.append(dihedral_value)
+            else:
+                Ambiguous.append(dihedral_value)
+
+        output_file = open("{}.txt".format(self.output_path),"wt")
+        output_file.write("Ratio of R: {}\n".format(100*(len(R)/(len(R)+len(S)))))
+        output_file.write("Ratio of S: {}\n".format(100*(len(S)/(len(R)+len(S)))))
+        output_file.write("Mean dihedral value of R: {}\n".format(n.mean(R)))
+        output_file.write("Mean dihedral value of S: {}\n".format(n.mean(S)))
+        output_file.write("Mean dihedral value of ambigous: {}\n".format(n.mean(Ambiguous)))
+        output_file.write("Number of ambigous poses: {}\n".format(len(Ambiguous)))
+
     def TRNE(self):
         """
         Function to calculate the time of residence, the inside steps, and the number of entrances
@@ -479,4 +532,9 @@ if __name__ == "__main__":
         if not os.path.exists("CABE_"+PELEanalyzer.output_path):
             os.mkdir("CABE_"+PELEanalyzer.output_path)
         PELEanalyzer.CABE()
-        os.system("mv {}*.* CABE_{}/".format(PELEanalyzer.output_path,PELEanalyzer.output_path))        
+        os.system("mv {}*.* CABE_{}/".format(PELEanalyzer.output_path,PELEanalyzer.output_path))
+    if PELEanalyzer.analysis.upper() == "EE":
+        if not os.path.exists("EE_"+PELEanalyzer.output_path):
+            os.mkdir("EE_"+PELEanalyzer.output_path)
+        PELEanalyzer.EE()
+        os.system("mv {}*.* EE_{}/".format(PELEanalyzer.output_path,PELEanalyzer.output_path))

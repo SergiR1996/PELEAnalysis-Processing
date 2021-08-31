@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="66e56163-dd1b-4986-8e1b-d4b093190594" name="Default Changelist" comment="" />
+    <list default="true" id="66e56163-dd1b-4986-8e1b-d4b093190594" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PELEAnalysis-Processing/PELE_scripts/PELEAnalyzer.py" beforeDir="false" afterPath="$PROJECT_DIR$/PELEAnalysis-Processing/PELE_scripts/PELEAnalyzer.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -111,7 +117,14 @@
       <option name="project" value="LOCAL" />
       <updated>1624091579984</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Updated output of the TRNE job of the PELEAnalyzer Python script.">
+      <created>1625142726488</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1625142726488</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -139,12 +152,24 @@
       <window_info anchor="right" id="R Packages" order="4" />
     </layout>
   </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+      </list>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="&quot;Added PELEAnalyzer Python script, which aims to combine the different Python scripts to perform several analysis into a one summarized script. Likewise, new features have been added and some of the jobs have been parallelized.&quot;" />
     <MESSAGE value="Added PELEAnalyzer Python script, which aims to combine the different Python scripts to perform several analysis into a one summarized script. Likewise, new features have been added and some of the jobs have been parallelized." />
     <MESSAGE value="Updated PELEAddMetric Python script which enables the measurement of distances, angles, and dihedrals on trajectories of PELE simulations (both in pdb and xtc format). Also, the code has been parallelized to make the calculus faster." />
     <MESSAGE value="Updated PELEAnalyzer Python script to allow the drop of the empty columns coming from the report files outputted from PELEAddMetric Python script." />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated PELEAnalyzer Python script to allow the drop of the empty columns coming from the report files outputted from PELEAddMetric Python script." />
+    <MESSAGE value="Updated output of the TRNE job of the PELEAnalyzer Python script." />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated output of the TRNE job of the PELEAnalyzer Python script." />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/PETase_Manuel_2HEMHET_D238SL272D.csv" />
