@@ -139,6 +139,39 @@ class PELEAnalyzer():
 
         return new_list
 
+    def Calculate_total_catalytic_events(self, set_of_thresholds, report):
+        """
+        Helper function to calculate the catalytic events out of the total PELE steps
+        whether are accepted or rejected
+
+        PARAMETERS
+        ----------
+        set_of_thresholds: list of booleans
+                List of booleans
+
+        RETURNS
+        -------
+        Total_CE: The total number of catalytic events in the report file
+                Integer/Float
+        """
+
+        Total_CE = 0
+
+        for i,row in enumerate(set_of_thresholds):
+            if i>0:
+                if row==True and i != len(set_of_thresholds)-1 and set_of_thresholds[i-1]==True:
+                    Total_CE += (report.loc[i][1]-report.loc[i-1][1])
+                elif row==False and set_of_thresholds[i-1]==True:
+                    Total_CE += (report.loc[i][1]-report.loc[i-1][1])-1
+                elif row==True and i == len(set_of_thresholds)-1:
+                    Total_CE += (self.num_steps-report.loc[i][1])
+                else:
+                    continue
+            else:
+                continue
+
+        return  Total_CE
+
     def Catalytic_events_and_means(self, report):
         """
         Take the PELE simulation report files and obtains the number of steps with 
@@ -152,7 +185,8 @@ class PELEAnalyzer():
         entrance: integer
                       Number of entrances        
         """
-        values_aux, cat_events, cat_trajectories = [], [], []
+
+        values_aux, cat_events, cat_trajectories, total_catalytic_events = [], [], [],  []
 
         rep = pd.read_csv(report,sep="    ")
         rep.dropna(axis=1,inplace=True)
@@ -161,40 +195,53 @@ class PELEAnalyzer():
             if self.add_histidine:
                 if i == 0:
                     if self.cysteine:
-                        CATE = rep[(rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
+                        set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
                         (rep[rep.columns[self.catalytic_event[0]+i+1]] <= self.threshold_histidine) & \
                         (rep[rep.columns[self.catalytic_event[1]]] <= self.catalytic_distance) & \
-                        (rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance)]
+                        (rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance)
+                        CATE = rep[set_of_thresholds]
+                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
                     else:
-                        CATE = rep[(rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
+                        set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
                         (rep[rep.columns[self.catalytic_event[0]+i+1]] <= self.threshold_histidine) & \
                         (rep[rep.columns[self.catalytic_event[1]]] <= self.catalytic_distance) & \
                         ((rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance) \
-                        | (rep[rep.columns[self.catalytic_event[2]+1]] <= self.catalytic_distance))]
+                        | (rep[rep.columns[self.catalytic_event[2]+1]] <= self.catalytic_distance))
+                        CATE = rep[set_of_thresholds]
+                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
                 else:
                     if self.cysteine:
-                        CATE = rep[(rep[rep.columns[self.catalytic_event[0]+2^i]] <= self.threshold) & \
+                        set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+2^i]] <= self.threshold) & \
                         (rep[rep.columns[self.catalytic_event[0]+2**i+1]] <= self.threshold_histidine) & \
                         (rep[rep.columns[self.catalytic_event[1]]] <= self.catalytic_distance) & \
-                        (rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance)]
+                        (rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance)
+                        CATE = rep[set_of_thresholds]
+                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
                     else:
-                        CATE = rep[(rep[rep.columns[self.catalytic_event[0]+2^i]] <= self.threshold) & \
+                        set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+2^i]] <= self.threshold) & \
                         (rep[rep.columns[self.catalytic_event[0]+2**i+1]] <= self.threshold_histidine) & \
                         (rep[rep.columns[self.catalytic_event[1]]] <= self.catalytic_distance) & \
                         ((rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance) \
-                        | (rep[rep.columns[self.catalytic_event[2]+1]] <= self.catalytic_distance))]
+                        | (rep[rep.columns[self.catalytic_event[2]+1]] <= self.catalytic_distance))
+                        CATE = rep[set_of_thresholds]
+                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
             else:
                 if self.cysteine:
-                    CATE = rep[(rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
+                    set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
                     (rep[rep.columns[self.catalytic_event[1]]] <= self.catalytic_distance) & \
-                    (rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance)]
+                    (rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance)
+                    CATE = rep[set_of_thresholds]
+                    Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
                 else:
-                    CATE = rep[(rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
+                    set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
                     (rep[rep.columns[self.catalytic_event[1]]] <= self.catalytic_distance) & \
                     ((rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance) \
-                    | (rep[rep.columns[self.catalytic_event[2]+1]] <= self.catalytic_distance))]
+                    | (rep[rep.columns[self.catalytic_event[2]+1]] <= self.catalytic_distance))
+                    CATE = rep[set_of_thresholds]
+                    Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
             CE = CATE.shape[0]
             cat_events.append(CE)
+            total_catalytic_events.append(Total_CE)
             if CE!=0:
                 cat_trajectories.append(1)
                 if self.verbose:
@@ -202,7 +249,7 @@ class PELEAnalyzer():
             else:
                 cat_trajectories.append(0)
 
-        return values_aux, cat_events, cat_trajectories
+        return values_aux, cat_events, cat_trajectories, rep.shape[0], total_catalytic_events
 
     def CalculateFreeEnergy(self, report):
         """
@@ -357,7 +404,7 @@ class PELEAnalyzer():
 
         It is called when this script is the main program called by the interpreter
         """
-        Results, results, values, cat_events, cat_trajectories = {}, [], [], [], []
+        Results, results, values, cat_events, cat_trajectories, total_accepted_steps, total_cat_events = {}, [], [], [], [], [], []
 
         pool = mp.Pool(self.n_processors)
         results.append(pool.map(self.Catalytic_events_and_means,self.reports))
@@ -369,6 +416,8 @@ class PELEAnalyzer():
             values.append(elem[0][0])
             cat_events.append(elem[1])
             cat_trajectories.append(elem[2])
+            total_accepted_steps.append(elem[3])
+            total_cat_events.append(elem[4])
 
         values = self.DecompressList(values)
 
@@ -383,10 +432,12 @@ class PELEAnalyzer():
         means, std = [round(i,3) for i in means],[round(i,3) for i in std]
         for i in range(self.n_of_ester_groups):
             column_names.append("cat_events_{}".format(i+1));column_names.append("cat_n_trajectories_{}".format(i+1))
+            column_names.append("cat_events_{} (%)".format(i + 1));column_names.append("total_cat_events_{}".format(i+1))
+            column_names.append("total_cat_events_{} (%)".format(i + 1))
 
-        for i,j in zip(n.sum(cat_events,axis=0),n.sum(cat_trajectories,axis=0)):
-            means += [i,j]
-            std += [0,0]
+        for i,j,k in zip(n.sum(cat_events,axis=0),n.sum(cat_trajectories,axis=0),n.sum(total_cat_events,axis=0)):
+            means += [i,j,100*i/n.sum(total_accepted_steps,axis=0),k,100*k/(len(self.reports)*self.num_steps)]
+            std += ["-","-","-","-","-"]
 
         for key,item,second_item in zip(column_names,means,std):
             Results[key] = (item, second_item)
@@ -395,6 +446,15 @@ class PELEAnalyzer():
         df.drop(self.to_drop, axis = 1, inplace=True)
         df = df.round(3)
         df.to_csv(self.output_path+".csv")
+
+        output_file = open("{}_catalytic_events.txt".format(self.output_path), "wt")
+        for i in range(self.n_of_ester_groups):
+            output_file.write("Number of accepted catalytic events in group {}: {}\n".format(i+1,means[-5-(5*i)]))
+            output_file.write("Relative frequency of accepted catalytic events in group {}: {} %\n".format(i+1,means[-3-(5*i)]))
+            output_file.write("Number of independent trajectories with catalytic events in group {}: {}\n".format(i+1,means[-4-(5*i)]))
+            output_file.write("Number of total catalytic events in group {}: {}\n".format(i+1,means[-2-(5*i)]))
+            output_file.write("Relative frequency of total catalytic events in group {}: {} %\n".format(i+1,means[-1-(5*i)]))
+            output_file.write("------------------------------------------------\n")
 
     def CABE(self):
         """

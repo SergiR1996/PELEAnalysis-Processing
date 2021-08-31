@@ -124,7 +124,14 @@
       <option name="project" value="LOCAL" />
       <updated>1625142726488</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Added EE function for enantiomeric analysis of PELE simulations in the PELEAnalyzer Python script.">
+      <created>1630395867291</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1630395867291</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -169,7 +176,8 @@
     <MESSAGE value="Updated PELEAddMetric Python script which enables the measurement of distances, angles, and dihedrals on trajectories of PELE simulations (both in pdb and xtc format). Also, the code has been parallelized to make the calculus faster." />
     <MESSAGE value="Updated PELEAnalyzer Python script to allow the drop of the empty columns coming from the report files outputted from PELEAddMetric Python script." />
     <MESSAGE value="Updated output of the TRNE job of the PELEAnalyzer Python script." />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated output of the TRNE job of the PELEAnalyzer Python script." />
+    <MESSAGE value="Added EE function for enantiomeric analysis of PELE simulations in the PELEAnalyzer Python script." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added EE function for enantiomeric analysis of PELE simulations in the PELEAnalyzer Python script." />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/PETase_Manuel_2HEMHET_D238SL272D.csv" />
