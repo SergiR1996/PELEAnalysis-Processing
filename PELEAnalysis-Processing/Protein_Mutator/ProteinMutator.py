@@ -155,15 +155,15 @@ class ProteinMutator():
 
         self.apply_mutation(0,'SER')
         self.apply_mutation(1,'HID')
-        self.apply_mutation(2,'ASP')
-        self.apply_mutation(3,'GLY')
-        self.apply_mutation(4,'GLY')
+        self.apply_mutation(2,'GLU')
+        #self.apply_mutation(3,'GLY')
+        #self.apply_mutation(4,'GLY')
         self.refine_mutation(1)
         # self.apply_mutation(2,'ASP')
 
 
 if __name__ == "__main__":
     """Call the main function"""
-    PM = ProteinMutator(sys.argv[1],sys.argv[2],1)
+    PM = ProteinMutator(sys.argv[1],[284,122,124],1)
     PM.main()
 

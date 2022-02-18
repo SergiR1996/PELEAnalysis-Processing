@@ -35,7 +35,7 @@ class PELEAnalyzer():
         self.reports, self.output_path, self.threshold, self.column_number, self.window_size, self.catalytic_event,\
         self.to_drop, self.n_of_ester_groups, self.add_histidine, self.cysteine, self.threshold_histidine,\
         self.catalytic_distance, self.verbose, self.perform_plots, self.violin_plots,\
-        self.num_steps, self.n_processors,self.analysis  = self.parseArgs()
+        self.num_steps, self.n_processors,self.analysis,self.separation  = self.parseArgs()
 
     def parseArgs(self):
         """
@@ -98,11 +98,13 @@ class PELEAnalyzer():
         optional.add_argument("-VP","--violin_plots",
                               help="Perform violin plots instead of box plots", action="store_true")
         optional.add_argument("-NS","--num_steps", metavar="INTEGER",type=int,
-                              help="number of steps per report", default = 40)
+                              help="number of steps per report", default = 0)
         optional.add_argument("-NP","--n_processors", metavar="INTEGER",type=int,
                               help="number of processors to execute the code", default = 4)
         optional.add_argument("-A","--analysis", metavar="STRING",type=str,
                               help="Type of analysis to perform", default="CATE")
+        optional.add_argument("-S","--separation", metavar="STRING", type=str,
+                              help="Type of delimiter between columns of the report file", default="    ")
         parser._action_groups.append(optional)
         args = parser.parse_args()
 
@@ -114,7 +116,7 @@ class PELEAnalyzer():
         return reports, args.output, args.threshold, int(args.column_number)-1, args.window_size, \
         args.catalytic_event, args.to_drop, args.n_of_ester_groups, args.add_histidine, args.cysteine,\
         args.threshold_histidine, args.catalytic_distance, args.verbose, args.perform_plots,\
-        args.violin_plots, args.num_steps, args.n_processors, args.analysis
+        args.violin_plots, args.num_steps, args.n_processors, args.analysis, args.separation
 
     def DecompressList(self,l_of_lists):
         """
@@ -139,7 +141,7 @@ class PELEAnalyzer():
 
         return new_list
 
-    def Calculate_total_catalytic_events(self, set_of_thresholds, report):
+    def Calculate_total_catalytic_events(self, set_of_thresholds, report, num_steps):
         """
         Helper function to calculate the catalytic events out of the total PELE steps
         whether are accepted or rejected
@@ -162,9 +164,9 @@ class PELEAnalyzer():
                 if row==True and i != len(set_of_thresholds)-1 and set_of_thresholds[i-1]==True:
                     Total_CE += (report.loc[i][1]-report.loc[i-1][1])
                 elif row==False and set_of_thresholds[i-1]==True:
-                    Total_CE += (report.loc[i][1]-report.loc[i-1][1])-1
+                    Total_CE += (report.loc[i][1]-report.loc[i-1][1])
                 elif row==True and i == len(set_of_thresholds)-1:
-                    Total_CE += (self.num_steps-report.loc[i][1])
+                    Total_CE += (num_steps-report.loc[i][1])
                 else:
                     continue
             else:
@@ -186,9 +188,18 @@ class PELEAnalyzer():
                       Number of entrances        
         """
 
-        values_aux, cat_events, cat_trajectories, total_catalytic_events = [], [], [],  []
+        values_aux, cat_events, cat_trajectories, total_catalytic_events, total_num_steps = [], [], [],  [], 0
 
-        rep = pd.read_csv(report,sep="    ")
+        rep = pd.read_csv(report,sep=self.separation)
+        logfilename = "/".join(report.split("/")[:-1])+"/logFile_"+report.split("/")[-1].split("metric")[0][-3:].replace("_","").replace("t","")+".txt"
+        if os.path.isfile(logfilename):
+            logfile = open(logfilename, "rt")
+            for line in logfile:
+                if "New Step" in line:
+                    num_steps = int(line.split()[-1])
+        if self.num_steps != 0:
+            num_steps = self.num_steps
+        total_num_steps+=num_steps
         rep.dropna(axis=1,inplace=True)
         values_aux.append(rep.values.tolist())
         for i in range(self.n_of_ester_groups):
@@ -200,7 +211,7 @@ class PELEAnalyzer():
                         (rep[rep.columns[self.catalytic_event[1]]] <= self.catalytic_distance) & \
                         (rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance)
                         CATE = rep[set_of_thresholds]
-                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
+                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep, num_steps)
                     else:
                         set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
                         (rep[rep.columns[self.catalytic_event[0]+i+1]] <= self.threshold_histidine) & \
@@ -208,7 +219,7 @@ class PELEAnalyzer():
                         ((rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance) \
                         | (rep[rep.columns[self.catalytic_event[2]+1]] <= self.catalytic_distance))
                         CATE = rep[set_of_thresholds]
-                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
+                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep, num_steps)
                 else:
                     if self.cysteine:
                         set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+2^i]] <= self.threshold) & \
@@ -216,7 +227,7 @@ class PELEAnalyzer():
                         (rep[rep.columns[self.catalytic_event[1]]] <= self.catalytic_distance) & \
                         (rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance)
                         CATE = rep[set_of_thresholds]
-                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
+                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep, num_steps)
                     else:
                         set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+2^i]] <= self.threshold) & \
                         (rep[rep.columns[self.catalytic_event[0]+2**i+1]] <= self.threshold_histidine) & \
@@ -224,21 +235,21 @@ class PELEAnalyzer():
                         ((rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance) \
                         | (rep[rep.columns[self.catalytic_event[2]+1]] <= self.catalytic_distance))
                         CATE = rep[set_of_thresholds]
-                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
+                        Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep, num_steps)
             else:
                 if self.cysteine:
                     set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
                     (rep[rep.columns[self.catalytic_event[1]]] <= self.catalytic_distance) & \
                     (rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance)
                     CATE = rep[set_of_thresholds]
-                    Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
+                    Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep, num_steps)
                 else:
                     set_of_thresholds = (rep[rep.columns[self.catalytic_event[0]+i]] <= self.threshold) & \
                     (rep[rep.columns[self.catalytic_event[1]]] <= self.catalytic_distance) & \
                     ((rep[rep.columns[self.catalytic_event[2]]] <= self.catalytic_distance) \
                     | (rep[rep.columns[self.catalytic_event[2]+1]] <= self.catalytic_distance))
                     CATE = rep[set_of_thresholds]
-                    Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep)
+                    Total_CE = self.Calculate_total_catalytic_events(set_of_thresholds, rep, num_steps)
             CE = CATE.shape[0]
             cat_events.append(CE)
             total_catalytic_events.append(Total_CE)
@@ -249,7 +260,7 @@ class PELEAnalyzer():
             else:
                 cat_trajectories.append(0)
 
-        return values_aux, cat_events, cat_trajectories, rep.shape[0], total_catalytic_events
+        return values_aux, cat_events, cat_trajectories, rep.shape[0], total_catalytic_events, total_num_steps
 
     def CalculateFreeEnergy(self, report):
         """
@@ -264,7 +275,7 @@ class PELEAnalyzer():
 
         G1, G2 = [],[]
 
-        rep = pd.read_csv(report,sep="    ")
+        rep = pd.read_csv(report,sep=self.separation)
         rep.dropna(axis=1,inplace=True)
         for i_row in range(rep.shape[0]):
           if rep.loc[i_row][self.column_number]<=self.threshold:
@@ -286,7 +297,7 @@ class PELEAnalyzer():
                       Report file with the steps that have the metric below the threshold  
         """
 
-        rep = pd.read_csv(report, sep="    ")
+        rep = pd.read_csv(report, sep=self.separation)
         rep.dropna(axis=1,inplace=True)
         Rep = rep[rep[rep.columns[self.column_number]] <= self.threshold]
 
@@ -306,9 +317,18 @@ class PELEAnalyzer():
                       Number of entrances        
         """
 
-        inside_bool, instances, entrance = False,[],0
+        inside_bool, instances, entrance, Nsteps = False,[],0,[]
 
-        rep = pd.read_csv(report,sep="    ")
+        rep = pd.read_csv(report,sep=self.separation)
+        logfilename = "/".join(report.split("/")[:-1])+"/logFile_"+report.split("/")[-1].split("metric")[0][-3:].replace("_","").replace("t","")+".txt"
+        if os.path.isfile(logfilename):
+            logfile = open(logfilename, "rt")
+            for line in logfile:
+                if "New Step" in line:
+                    num_steps = int(line.split()[-1])
+        if self.num_steps != 0:
+            num_steps = self.num_steps
+        Nsteps.append(num_steps)
         rep.dropna(axis=1,inplace=True)
         step_in,i_aux,entrance_aux,instances_aux = 0,0,0,0
         for i_row in range(1,rep.shape[0]):
@@ -326,7 +346,7 @@ class PELEAnalyzer():
                 inside_bool = True
             elif rep.loc[i_row][self.column_number] < self.threshold and inside_bool == False and i_row == (rep.shape[0]-1):
             # Else if the distance goes below the threshold and this is the last accepted step, execute this
-                instances_aux+=(self.num_steps-rep.loc[i_row][1])
+                instances_aux+=(num_steps-rep.loc[i_row][1])
                 if (rep.loc[i_row][1] - i_aux) >= self.window_size and i_aux !=0:
                     entrance_aux+=1
                 elif i_aux == 0 or entrance_aux == 0:
@@ -345,7 +365,7 @@ class PELEAnalyzer():
                 i_aux = rep.loc[i_row][1]
             elif rep.loc[i_row][self.column_number] < self.threshold and inside_bool == True and i_row == (rep.shape[0]-1):
             # Else if the distance goes below the threshold but the previous step was already below it and it is the last step, execute this
-                instances_aux+=(self.num_steps-step_in)
+                instances_aux+=(num_steps-step_in)
                 instances.append(instances_aux)
             else:
                 inside_bool = False
@@ -353,7 +373,7 @@ class PELEAnalyzer():
         inside_bool = False
 #        total_steps += rep.loc[rep.shape[0]-1][1]
 
-        return instances, entrance
+        return instances, entrance, Nsteps
 
     def CATE_plot(self, values, column_names):
         """
@@ -404,7 +424,12 @@ class PELEAnalyzer():
 
         It is called when this script is the main program called by the interpreter
         """
-        Results, results, values, cat_events, cat_trajectories, total_accepted_steps, total_cat_events = {}, [], [], [], [], [], []
+        Results, results, values, cat_events, cat_trajectories, total_accepted_steps, total_cat_events, total_num_steps = {}, [], [], [], [], [], [], 0
+
+        logfilename = "/".join(self.reports[0].split("/")[:-1])+"/logFile_"+self.reports[0].split("/")[-1].split("metric")[0][-3:].replace("_","").replace("t","")+".txt"
+        
+        if not os.path.isfile(logfilename) and self.num_steps == 0:
+            raise ValueError("Logfiles are missing, use the num_of_steps flag instead")
 
         pool = mp.Pool(self.n_processors)
         results.append(pool.map(self.Catalytic_events_and_means,self.reports))
@@ -418,10 +443,11 @@ class PELEAnalyzer():
             cat_trajectories.append(elem[2])
             total_accepted_steps.append(elem[3])
             total_cat_events.append(elem[4])
+            total_num_steps += elem[5]
 
         values = self.DecompressList(values)
 
-        report = pd.read_csv(self.reports[0],sep="    ")
+        report = pd.read_csv(self.reports[0],sep=self.separation)
         report.dropna(axis=1,inplace=True)
         column_names = list(report.columns[3:])
 
@@ -436,7 +462,7 @@ class PELEAnalyzer():
             column_names.append("total_cat_events_{} (%)".format(i + 1))
 
         for i,j,k in zip(n.sum(cat_events,axis=0),n.sum(cat_trajectories,axis=0),n.sum(total_cat_events,axis=0)):
-            means += [i,j,100*i/n.sum(total_accepted_steps,axis=0),k,100*k/(len(self.reports)*self.num_steps)]
+            means += [i,j,100*i/n.sum(total_accepted_steps,axis=0),k,100*k/(total_num_steps)]
             std += ["-","-","-","-","-"]
 
         for key,item,second_item in zip(column_names,means,std):
@@ -450,11 +476,16 @@ class PELEAnalyzer():
         output_file = open("{}_catalytic_events.txt".format(self.output_path), "wt")
         for i in range(self.n_of_ester_groups):
             output_file.write("Number of accepted catalytic events in group {}: {}\n".format(i+1,means[-5-(5*i)]))
-            output_file.write("Relative frequency of accepted catalytic events in group {}: {} %\n".format(i+1,means[-3-(5*i)]))
+            output_file.write("Relative frequency of accepted catalytic events in group {}: {} %\n".format(i+1,round(means[-3-(5*i)],3)))
             output_file.write("Number of independent trajectories with catalytic events in group {}: {}\n".format(i+1,means[-4-(5*i)]))
             output_file.write("Number of total catalytic events in group {}: {}\n".format(i+1,means[-2-(5*i)]))
-            output_file.write("Relative frequency of total catalytic events in group {}: {} %\n".format(i+1,means[-1-(5*i)]))
+            output_file.write("Relative frequency of total catalytic events in group {}: {} %\n".format(i+1,round(means[-1-(5*i)],3)))
             output_file.write("------------------------------------------------\n")
+
+        output_file.write("\nNumber of accepted catalytic events in all groups: {}\n".format(n.sum(cat_events)))
+        output_file.write("Relative frequency of accepted catalytic events in all groups: {} %\n".format(round(100*n.sum(cat_events)/n.sum(total_accepted_steps),3)))
+        output_file.write("Number of accepted catalytic events in all groups: {}\n".format(n.sum(total_cat_events)))
+        output_file.write("Relative frequency of accepted catalytic events in all groups: {} %\n".format(round(100*n.sum(total_cat_events) / (total_num_steps), 3)))
 
     def CABE(self):
         """
@@ -545,7 +576,12 @@ class PELEAnalyzer():
         It is called when this script is the main program called by the interpreter
         """
 
-        results,instances,entrance = [],[],0
+        results,instances,entrance,Nsteps = [],[],0,[]
+
+        logfilename = "/".join(self.reports[0].split("/")[:-1])+"/logFile_"+self.reports[0].split("/")[-1].split("metric")[0][-3:].replace("_","").replace("t","")+".txt"
+
+        if not os.path.isfile(logfilename) and self.num_steps == 0:
+            raise ValueError("Logfiles are missing, use the num_of_steps flag instead")
 
         pool = mp.Pool(self.n_processors)
         results.append(pool.map(self.Time_of_residence_and_number_of_entrances,self.reports))
@@ -557,8 +593,10 @@ class PELEAnalyzer():
             if len(elem[0])!=0:
                 instances.append(elem[0])
             entrance += elem[1]
+            Nsteps.append(elem[2])
 
         instances = self.DecompressList(instances)
+        num_steps = n.mean(Nsteps)
 
         if self.perform_plots:
             if self.violin_plots:
@@ -572,7 +610,7 @@ class PELEAnalyzer():
         output_file.write("Number of inside steps: {}\n".format(n.sum(instances)))
         output_file.write("Inside events: {}\n".format(len(instances)))
         output_file.write("Residence time: {}\n".format(n.mean(instances,axis=0)))
-        output_file.write("Relative residence time: {}\n".format((100*n.mean(instances,axis=0))/(self.num_steps)))
+        output_file.write("Relative residence time: {}\n".format((100*n.mean(instances,axis=0))/(num_steps)))
         output_file.write("Number of entrances: {}\n".format(entrance))
 
 if __name__ == "__main__":
