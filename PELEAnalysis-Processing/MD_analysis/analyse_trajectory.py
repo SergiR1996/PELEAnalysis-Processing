@@ -93,22 +93,17 @@ def main():
     tra, top, rmsd, rmsf, local_rmsd, distance, catalytic_distance, epsilon_protonated, contact, displacement, gyration, sasa, plot_style, plot, save_plot, time, acid, arginine, pickle_name, hbond, angle = parseArgs()
 
     traj = OpenFiles(tra, top)
-    number_of_frames = 10000000
     if ".xtc" in tra[0]:
         trajectory = traj.load_xtc()
-        for t in trajectory:
-            if traj.number_frames(t) < number_of_frames:
-                number_of_frames = traj.number_frames(t)
     else:
         trajectory = traj.load_trajectory()
-        number_of_frames = traj.number_frames(trajectory)
-
-    x_axis  = np.arange(0,number_of_frames,1)*time
     Residue_number = [i for i in range(len(trajectory[0].topology.select("name CA")))]
     
-    RMSD, LRMSD, RMSF, Distances, Contacts, Angles = [],[],[],[],[],[]
+    x_axis, RMSD, LRMSD, RMSF, Distances, Contacts, Angles = [],[],[],[],[],[],[]
 
     for traj in trajectory:
+
+        x_axis.append(np.arange(0,traj.n_frames,1)*time)
 
         prop = TrajectoryProperties(traj)
 
@@ -225,9 +220,9 @@ def main():
         #RMSD_av = average_property(RMSD)
         RMSD_all = np.array([item for sublist in RMSD for item in sublist])
         print("RMSD: "+str(RMSD_all.mean())+"(+-)"+str(RMSD_all.std())+"\n")
-        save_pickle(pickle_name, "RMSD", RMSD_all, x_axis*len(trajectory)) # multiplicate the X axis for the number of trajectories
+        save_pickle(pickle_name, "RMSD", RMSD_all, x_axis) # multiplicate the X axis for the number of trajectories
         for n, sublist in enumerate(RMSD):
-            plt.plot(x_axis, sublist, label=f"trajectory_{n}")
+            plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
         plt.title("Global RMSD of the MD simulation"); plt.xlabel("Time (ns)"); plt.ylabel("RMSD (nm)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_RMSD_plot.png"),dpi=300)
@@ -239,13 +234,12 @@ def main():
         #LRMSD_av = average_property(LRMSD)
         LRMSD_all = np.array([item for sublist in LRMSD for item in sublist])
         print("Local RMSD: "+str(LRMSD_all.mean())+"(+-)"+str(LRMSD_all.std())+"\n")
-        save_pickle(pickle_name, "LRMSD", LRMSD_all, x_axis*len(trajectory))
+        save_pickle(pickle_name, "LRMSD", LRMSD_all, x_axis)
         for n, sublist in enumerate(LRMSD):
-            plt.plot(x_axis, sublist, label=f"trajectory_{n}")
+            plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
         plt.title("Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd))); plt.xlabel("Time (ns)"); plt.ylabel("RMSD (nm)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_LocalRMSD_{}_plot.png".format("_".join(local_rmsd))),dpi=300)
-        plt.legend(loc='best')
         plt.clf()
         execute_plots(x_axis, LRMSD_all, "Time (ns)","RMSD (nm)",title = "Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd)), figure_name = "LocalRMSD_{}".format("_".join(local_rmsd)))
 
@@ -253,11 +247,10 @@ def main():
         RMSF_av = average_property(RMSF)
         save_pickle(pickle_name, "RMSF", RMSF_av, Residue_number)
         for n, sublist in enumerate(RMSF):
-            plt.plot(x_axis, sublist, label=f"trajectory_{n}")
+            plt.plot(Residue_number, sublist, label=f"trajectory_{n}")
         plt.title("RMSF of the MD simulation {}".format(" ".join(local_rmsd))); plt.xlabel("Time (ns)"); plt.ylabel("RMSF (nm)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_RMSF_traj_plot.png".format("_".join(local_rmsd))),dpi=300)
-        plt.legend(loc='best')
         plt.clf()
         execute_plots(Residue_number, RMSF_av, "Residue number","RMSF (nm)",title = "RMSF of the MD simulation",figure_name = "RMSF")
 
@@ -265,13 +258,12 @@ def main():
         #Distances_av = average_property(Distances)
         Distances_all = np.array([item for sublist in Distances for item in sublist])
         print("Distance: "+str(Distances_all.mean())+"(+-)"+str(Distances_all.std())+"\n")
-        save_pickle(pickle_name, "Distance", Distances_all, x_axis*len(trajectory))
+        save_pickle(pickle_name, "Distance", Distances_all, x_axis)
         for n, sublist in enumerate(Distances):
-            plt.plot(x_axis, sublist, label=f"trajectory_{n}")
+            plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
         plt.title("Distance of the MD simulation between atoms {}".format(" and ".join(str(index) for index in distance))); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_distance_{}_plot.png".format("_".join(str(index) for index in distance))),dpi=300)
-        plt.legend(loc='best')
         plt.clf()
         execute_plots(x_axis, Distances_all, "Time (ns)","Distance ($\AA$)",title = "Distance of the MD simulation between atoms {}".format(" and ".join(str(index) for index in distance)),figure_name = "distance_{}".format("_".join(str(index) for index in distance)))
 
@@ -279,23 +271,21 @@ def main():
         #Distances_av = average_property(Distances)
         Distances_all = np.array([item for sublist in Distances for item in sublist])
         print("Distance: "+str(Distances_all.mean())+"(+-)"+str(Distances_all.std())+"\n")
-        save_pickle(pickle_name, "Catalytic_distance", Distances_all, x_axis*len(trajectory))
+        save_pickle(pickle_name, "Catalytic_distance", Distances_all, x_axis)
         if acid:
             for n, sublist in enumerate(Distances):
-                plt.plot(x_axis, sublist, label=f"trajectory_{n}")
+                plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
             plt.title("Acid-His catalytic distance of the MD simulation"); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
             if save_plot:
                 plt.savefig(os.path.join(os.getcwd(), "md_distance_{}_plot.png".format("_".join(str(index) for index in catalytic_distance[1:3]))),dpi=300)
-            plt.legend(loc='best')
             plt.clf()
             execute_plots(x_axis, Distances_all, "Time (ns)","Distance ($\AA$)",title = "Acid-His catalytic distance of the MD simulation",figure_name = "distance_{}".format("_".join(str(index) for index in catalytic_distance[1:3])))
         else:
             for n, sublist in enumerate(Distances):
-                plt.plot(x_axis, sublist, label=f"trajectory_{n}")
+                plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
             plt.title("Ser-His catalytic distance of the MD simulation"); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
             if save_plot:
                 plt.savefig(os.path.join(os.getcwd(), "md_distance_{}_plot.png".format("_".join(str(index) for index in catalytic_distance[0:2]))),dpi=300)
-            plt.legend(loc='best')
             plt.clf()
             execute_plots(x_axis, Distances_all, "Time (ns)","Distance ($\AA$)",title = "Ser-His catalytic distance of the MD simulation",figure_name = "distance_{}".format("_".join(str(index) for index in catalytic_distance[0:2])))
 
@@ -303,13 +293,12 @@ def main():
         #Contacts_av = average_property(Contacts)
         Contacts_all = np.array([item for sublist in Contacts for item in sublist])
         print("Contact: "+str(Contacts_all.mean())+"(+-)"+str(Contacts_all.std())+"\n")
-        save_pickle(pickle_name, "Contact", Contacts_all, x_axis*len(trajectory))
+        save_pickle(pickle_name, "Contact", Contacts_all, x_axis)
         for n, sublist in enumerate(Contacts):
-            plt.plot(x_axis, sublist, label=f"trajectory_{n}")
+            plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
         plt.title("Distance of the MD simulation between residues {}".format(" and ".join(str(index) for index in contact))); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_contact_{}_plot.png".format("_".join(str(index) for index in contact))),dpi=300)
-        plt.legend(loc='best')
         plt.clf()
         execute_plots(x_axis, Contacts_all, "Time (ns)","Distance ($\AA$)",title = "Distance of the MD simulation between residues {}".format(" and ".join(str(index) for index in contact)),figure_name = "contact_{}".format("_".join(str(index) for index in contact)))
 
@@ -317,9 +306,9 @@ def main():
         #Angles_av = average_property(Angles)
         Angles_all = np.array([item for sublist in Angles for item in sublist])
         print("Angle: "+str(Angles_all.mean())+"(+-)"+str(Angles_all.std())+"\n")
-        save_pickle(pickle_name, "Angle", Angles_all, x_axis*len(trajectory))
+        save_pickle(pickle_name, "Angle", Angles_all, x_axis)
         for n, sublist in enumerate(Angles):
-            plt.plot(x_axis, sublist, label=f"trajectory_{n}")
+            plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
         plt.title("Angle of the MD simulation between atoms {}".format(" and ".join(str(index) for index in angle))); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_angle_{}_plot.png".format("_".join(str(index) for index in angle))),dpi=300)
