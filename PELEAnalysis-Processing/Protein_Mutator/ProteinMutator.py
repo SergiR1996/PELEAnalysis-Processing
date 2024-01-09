@@ -5,6 +5,7 @@ import os,sys
 import glob
 import argparse as ap
 import multiprocessing as mp # Module to parallelize job.
+import argparse
 
 # Schrödinger software import
 from schrodinger import structure
@@ -20,12 +21,43 @@ __email__ = "sergi.rodallordes@bsc.es"
 
 class ProteinMutator():
 
-    def __init__(self,filename = "", mutated_residues = [0], pH = 7, simultaenous_mutations = 1):
+    def __init__(self):
 
-        self.__filename = filename
-        self.__mutated_residues = mutated_residues
-        self.__pH = pH
-        self.__simultaenous_mutations = simultaenous_mutations
+        self.__filename, self.__mutated_residues, self.__simultaenous_mutations, self.__refinement_range = self.parseArgs()
+        self.__mutated_residues = [i.split("_") for i in self.__mutated_residues]
+        self.__original_filename = self.__filename
+
+    def parseArgs(self):
+        """
+        Parse arguments from command-line
+
+        RETURNS
+        -------
+        input : string
+                  list of report files to look for data
+        mutated_residues : list of tuples
+                      List of specified residues to be mutated and to which residue
+        simultaenous_mutations: integer
+                      Apply all mutations simultaneously
+        refinement_range: float
+                      Radius around the mutated residue to be refined with Prime
+        """
+        parser = ap.ArgumentParser(description='Script that perform the specified mutations \
+            to a PDB file using Schrödinger suite.')
+        optional = parser._action_groups.pop()
+        required = parser.add_argument_group('required arguments')
+        required.add_argument("-i", "--input", required=True, metavar="FILE",
+                              type=str, help="path of the input PDB file")
+        optional.add_argument("-M","--mutated_residues", metavar="LIST",type=str,
+                              nargs='*',help="Residues that will be mutated (format: RES_NUM; GLU_123)")
+        optional.add_argument("-S","--simultaenous_mutations", metavar="INTEGER",type=int,
+                              help="Apply all the changes to the WT structure simultaneously", default=0)
+        optional.add_argument("-R","--refinement_range", metavar="FLOAT",type=float,
+                              help="Radius around the mutated residue to be refined with Prime", default=4.0)
+        parser._action_groups.append(optional)
+        args = parser.parse_args()
+
+        return args.input, args.mutated_residues, args.simultaenous_mutations, args.refinement_range
 
     @property
     def filename(self):
@@ -36,7 +68,7 @@ class ProteinMutator():
         PDB = open(self.__filename)
         for line in PDB:
             if (line[0:4] == "ATOM"):
-                if self.__mutated_residues[index] == int(line[22:26].strip()):
+                if index == int(line[22:26].strip()):
                     return int(line[6:11].strip())
 
     def apply_mutation(self,index,final_residue):
@@ -55,18 +87,21 @@ class ProteinMutator():
         The PDB file with the mutated residues
         """
 
+        if self.__simultaenous_mutations != 1:
+            self.__filename = self.__original_filename
+
         # Convert PDB input file into mae file for proper use
-        os.system("$SCHRODINGER/utilities/structconvert -ipdb {} -omae {}.mae".format(self.__filename,self.filename[:-4]))
-        Input_filename = "{}.mae".format(self.__filename[:-4])
+        os.system("$SCHRODINGER/utilities/structconvert -ipdb %s -omae %s.mae"%(self.__filename,self.__filename[:-4]))
+        Input_filename = "%s.mae"%(self.__filename[:-4])
 
 
         # Open the input mae file and create the output mae file where mutations will be added
         input_structure = structure.Structure.read(Input_filename)
-        output_structure = structure.StructureWriter("mutated_{}".format(Input_filename))
+        output_structure = structure.StructureWriter("mutated_%s"%(Input_filename))
         # output_structure.append(input_structure) # To append the input structure on the output file
 
         # Get the indices of the residues that want to be mutated and generate the list of the residues with their mutations
-        Mutations = [('A',self.__mutated_residues[index],' ',final_residue)]
+        Mutations = [('A',index,' ',final_residue)]
 
         # Generate the tool to create the mutated structures
         mutator = protein.Mutator(input_structure, Mutations)
@@ -85,10 +120,12 @@ class ProteinMutator():
 
         # os.system("$SCHRODINGER/utilities/prepwizard -epik_pH {} -propka_pH {} {} mutated_and_minimized_{}.pdb".format(self.__pH,self.__pH,"mutated_{}".format(Input_filename),self.filename[:-4]))
 
-        os.system("$SCHRODINGER/utilities/structconvert -imae {} -opdb {}.pdb".format("mutated_{}".format(Input_filename),self.filename[:-4]+"_"+final_residue))
+        os.system("$SCHRODINGER/utilities/structconvert -imae %s -opdb %s.pdb"%("mutated_%s"%(Input_filename),self.__filename[:-4]+"_"+final_residue))
 
-        if self.__simultaenous_mutations == 1:
-            self.__filename = self.filename[:-4]+"_"+final_residue+".pdb"
+        if self.__simultaenous_mutations != 1:
+            self.__filename = self.__original_filename[:-4]+"_"+final_residue+".pdb"
+        else:
+            self.__filename = self.__filename[:-4]+"_"+final_residue+".pdb"
 
     def refine_mutation(self,index):
         """
@@ -106,8 +143,8 @@ class ProteinMutator():
         The refined mutated pdb file
         """
 
-        os.system("$SCHRODINGER/utilities/structconvert -ipdb {} -omae {}.mae".format(self.__filename,self.filename[:-4]))
-        Input_filename = "{}.mae".format(self.__filename[:-4])
+        os.system("$SCHRODINGER/utilities/structconvert -ipdb %s -omae %s.mae"%(self.__filename,self.__filename[:-4]))
+        Input_filename = "%s.mae"%(self.__filename[:-4])
 
         st = structure.Structure.read(Input_filename)
 
@@ -122,7 +159,7 @@ class ProteinMutator():
                 break
 
         # We want to use the reference to gather the residues to refine
-        refine_residues = protein.get_residues_within(st,[mutated_residue],within = 10.0)
+        refine_residues = protein.get_residues_within(st,[mutated_residue],within = self.__refinement_range)
 
         # Create the refiner
         refiner = protein.Refiner(st, residues=refine_residues)
@@ -135,7 +172,7 @@ class ProteinMutator():
         The method applies a minimization to a mutated pdb file
         """
 
-        os.system("$SCHRODINGER/utilities/structconvert -ipdb mutated_{} -omae aux_{}.mae".format(self.__filename,self.filename[:-4]))
+        os.system("$SCHRODINGER/utilities/structconvert -ipdb mutated_{} -omae aux_{}.mae".format(self.__filename,self.__filename[:-4]))
         Input_filename = "aux_{}.mae".format(self.__filename[:-4])
 
         input_structure = structure.Structure.read(Input_filename)
@@ -144,7 +181,7 @@ class ProteinMutator():
         minimize.minimize_structure(input_structure)
         output_structure.append("min"+Input_filename)
 
-        os.system("$SCHRODINGER/utilities/structconvert -imae {} -opdb minimized_{}.pdb".format("minimized_{}".format(Input_filename),self.filename[:-4]))
+        os.system("$SCHRODINGER/utilities/structconvert -imae {} -opdb minimized_{}.pdb".format("minimized_{}".format(Input_filename),self.__filename[:-4]))
 
     def main(self):
         """
@@ -153,17 +190,18 @@ class ProteinMutator():
         It is called when this script is the main program called by the interpreter
         """
 
-        self.apply_mutation(0,'SER')
-        self.apply_mutation(1,'HID')
-        self.apply_mutation(2,'GLU')
-        #self.apply_mutation(3,'GLY')
-        #self.apply_mutation(4,'GLY')
-        self.refine_mutation(1)
-        # self.apply_mutation(2,'ASP')
+        for i, mutatable_residue in enumerate(self.__mutated_residues):
+            self.apply_mutation(int(mutatable_residue[1]),mutatable_residue[0])
+            if self.__simultaenous_mutations != 1:
+                self.refine_mutation(int(mutatable_residue[1]))
+                os.system("$SCHRODINGER/utilities/structconvert -imae refinement_job_%s/Refine-out.maegz -opdb %s%s%s.pdb"%(i+1,self.__original_filename[:-4],mutatable_residue[0],mutatable_residue[1]))
+        if self.__simultaenous_mutations == 1:
+            self.refine_mutation(int(self.__mutated_residues[-1][1]))
+            os.system("$SCHRODINGER/utilities/structconvert -imae refinement_job_1/Refine-out.maegz -opdb %s.pdb"%(self.__filename[:-4]))
 
 
 if __name__ == "__main__":
     """Call the main function"""
-    PM = ProteinMutator(sys.argv[1],[284,122,124],1)
+    PM = ProteinMutator()
     PM.main()
 

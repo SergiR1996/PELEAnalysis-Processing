@@ -421,8 +421,13 @@ def scatterPlot(reports,
 
     # Save or display the plot depending on whether an output path was set or not
     if output_path is not None:
-        plt.savefig(output_path)
+        fig.set_size_inches(18.5, 10.5)
+        plt.ylim(min(y_values)-10,10); plt.tight_layout()
+        #plt.tight_layout()
+        plt.savefig(output_path, dpi=300)
     else:
+        plt.ylim(min(y_values)-10, 10)
+        #plt.tight_layout()
         plt.show()
 
 def TwoDensityPlot(reports,

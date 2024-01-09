@@ -124,7 +124,6 @@ class TrajectoryProperties:
 
         return new_metric
 
-
     def radians_to_degrees(func):
 
         """
@@ -183,7 +182,7 @@ class TrajectoryProperties:
         :return: distances:  np.ndarray, shape=(n_frames, n_pairs); residues_pairs: np.ndarray, shape=(n_pairs, 2)
         """
 
-        return md.compute_contacts(self.traj, residue_pairs)
+        return md.compute_contacts(self.traj, residue_pairs)[0]
 
     @radians_to_degrees
     def compute_angles(self, angle_indices):
