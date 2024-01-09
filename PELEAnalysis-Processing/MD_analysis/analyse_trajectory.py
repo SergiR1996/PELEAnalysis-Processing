@@ -231,6 +231,7 @@ def main():
         plt.title("Global RMSD of the MD simulation"); plt.xlabel("Time (ns)"); plt.ylabel("RMSD (nm)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_RMSD_plot.png"),dpi=300)
+        plt.legend(loc='best')
         plt.clf()
         execute_plots(x_axis, RMSD_all, "Time (ns)","RMSD (nm)",title = "Global RMSD of the MD simulation",figure_name = "RMSD")
 
@@ -244,6 +245,7 @@ def main():
         plt.title("Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd))); plt.xlabel("Time (ns)"); plt.ylabel("RMSD (nm)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_LocalRMSD_{}_plot.png".format("_".join(local_rmsd))),dpi=300)
+        plt.legend(loc='best')
         plt.clf()
         execute_plots(x_axis, LRMSD_all, "Time (ns)","RMSD (nm)",title = "Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd)), figure_name = "LocalRMSD_{}".format("_".join(local_rmsd)))
 
@@ -255,6 +257,7 @@ def main():
         plt.title("RMSF of the MD simulation {}".format(" ".join(local_rmsd))); plt.xlabel("Time (ns)"); plt.ylabel("RMSF (nm)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_RMSF_traj_plot.png".format("_".join(local_rmsd))),dpi=300)
+        plt.legend(loc='best')
         plt.clf()
         execute_plots(Residue_number, RMSF_av, "Residue number","RMSF (nm)",title = "RMSF of the MD simulation",figure_name = "RMSF")
 
@@ -268,6 +271,7 @@ def main():
         plt.title("Distance of the MD simulation between atoms {}".format(" and ".join(str(index) for index in distance))); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_distance_{}_plot.png".format("_".join(str(index) for index in distance))),dpi=300)
+        plt.legend(loc='best')
         plt.clf()
         execute_plots(x_axis, Distances_all, "Time (ns)","Distance ($\AA$)",title = "Distance of the MD simulation between atoms {}".format(" and ".join(str(index) for index in distance)),figure_name = "distance_{}".format("_".join(str(index) for index in distance)))
 
@@ -282,6 +286,7 @@ def main():
             plt.title("Acid-His catalytic distance of the MD simulation"); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
             if save_plot:
                 plt.savefig(os.path.join(os.getcwd(), "md_distance_{}_plot.png".format("_".join(str(index) for index in catalytic_distance[1:3]))),dpi=300)
+            plt.legend(loc='best')
             plt.clf()
             execute_plots(x_axis, Distances_all, "Time (ns)","Distance ($\AA$)",title = "Acid-His catalytic distance of the MD simulation",figure_name = "distance_{}".format("_".join(str(index) for index in catalytic_distance[1:3])))
         else:
@@ -290,6 +295,7 @@ def main():
             plt.title("Ser-His catalytic distance of the MD simulation"); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
             if save_plot:
                 plt.savefig(os.path.join(os.getcwd(), "md_distance_{}_plot.png".format("_".join(str(index) for index in catalytic_distance[0:2]))),dpi=300)
+            plt.legend(loc='best')
             plt.clf()
             execute_plots(x_axis, Distances_all, "Time (ns)","Distance ($\AA$)",title = "Ser-His catalytic distance of the MD simulation",figure_name = "distance_{}".format("_".join(str(index) for index in catalytic_distance[0:2])))
 
@@ -303,6 +309,7 @@ def main():
         plt.title("Distance of the MD simulation between residues {}".format(" and ".join(str(index) for index in contact))); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_contact_{}_plot.png".format("_".join(str(index) for index in contact))),dpi=300)
+        plt.legend(loc='best')
         plt.clf()
         execute_plots(x_axis, Contacts_all, "Time (ns)","Distance ($\AA$)",title = "Distance of the MD simulation between residues {}".format(" and ".join(str(index) for index in contact)),figure_name = "contact_{}".format("_".join(str(index) for index in contact)))
 
