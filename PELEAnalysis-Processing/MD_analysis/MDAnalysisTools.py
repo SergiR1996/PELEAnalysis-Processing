@@ -338,5 +338,9 @@ class Plotter:
 
         if self.plot: plt.show()
         if self.save: plt.savefig(self.path, dpi=self.dpis)
+<<<<<<< HEAD
         plt.clf()
 
+=======
+        plt.clf()
+>>>>>>> e4ae316aae66688e9cf81223b0d7ba878b518a49

@@ -279,7 +279,6 @@ class PELEAnalyzer():
         rep.dropna(axis=1,inplace=True)
         for i_row in range(rep.shape[0]):
           if rep.loc[i_row][self.column_number]<=self.threshold:
-#          if rep.loc[i_row][self.column_number]<=self.threshold and rep.loc[i_row][5]<=0.2:
             G1.append(rep.loc[i_row][4])
           else:
             G2.append(rep.loc[i_row][4])
@@ -371,7 +370,6 @@ class PELEAnalyzer():
                 inside_bool = False
         entrance+=entrance_aux
         inside_bool = False
-#        total_steps += rep.loc[rep.shape[0]-1][1]
 
         return instances, entrance, Nsteps
 
@@ -484,8 +482,8 @@ class PELEAnalyzer():
 
         output_file.write("\nNumber of accepted catalytic events in all groups: {}\n".format(n.sum(cat_events)))
         output_file.write("Relative frequency of accepted catalytic events in all groups: {} %\n".format(round(100*n.sum(cat_events)/n.sum(total_accepted_steps),3)))
-        output_file.write("Number of accepted catalytic events in all groups: {}\n".format(n.sum(total_cat_events)))
-        output_file.write("Relative frequency of accepted catalytic events in all groups: {} %\n".format(round(100*n.sum(total_cat_events) / (total_num_steps), 3)))
+        output_file.write("Number of total catalytic events in all groups: {}\n".format(n.sum(total_cat_events)))
+        output_file.write("Relative frequency of total catalytic events in all groups: {} %\n".format(round(100*n.sum(total_cat_events) / (total_num_steps), 3)))
 
     def CABE(self):
         """
