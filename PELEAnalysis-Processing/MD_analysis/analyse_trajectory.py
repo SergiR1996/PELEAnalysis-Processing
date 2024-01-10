@@ -103,18 +103,18 @@ def main():
 
         x_axis.append(np.arange(0,traj.n_frames,1)*time)
 
-        prop = TrajectoryProperties(traj)
+        trajectory_properties = TrajectoryProperties(traj)
 
         if hbond:
-            HB.append(prop.compute_hydrogen_bonds(freq = 0.3))
+            HB.append(trajectory_properties.compute_hydrogen_bonds(freq = 0.3))
 
         if rmsd:
 
-            RMSD.append(prop.traj_rmsd(traj,traj.topology.select("backbone")))
+            RMSD.append(trajectory_properties.traj_rmsd(traj,traj.topology.select("backbone")))
 
         if local_rmsd is not None:
 
-            #LRMSD.append(prop.traj_rmsd(traj,traj.topology.select("resSeq {} and protein".format(" ".join(local_rmsd)))))
+            #LRMSD.append(trajectory_properties.traj_rmsd(traj,traj.topology.select("resSeq {} and protein".format(" ".join(local_rmsd)))))
 
             Res_indices=""
 
@@ -130,44 +130,41 @@ def main():
                 else:
                     Res_indices+=" or resSeq {} ".format(elem)
 
-            LRMSD.append(prop.traj_rmsd(traj,traj.topology.select(Res_indices+" and protein")))
+            LRMSD.append(trajectory_properties.traj_rmsd(traj,traj.topology.select(Res_indices+" and protein")))
 
         if rmsf:
 
-            RMSF.append(prop.traj_rmsf(traj,traj.topology.select("name CA")))
-               
+            RMSF.append(trajectory_properties.traj_rmsf(traj,traj.topology.select("name CA")))
 
         if distance is not None:
 
             if acid:
-                D1 = prop.compute_distance([distance])
-                D2 = prop.compute_distance([[distance[0],distance[1]+1]])
+                D1 = trajectory_properties.compute_distance([distance])
+                D2 = trajectory_properties.compute_distance([[distance[0],distance[1]+1]])
                 distances = []
                 for i in range(len(D1)):
                     distances.append(min(D1[i],D2[i]))
                 Distances.append(np.array(distances))
             
             if arginine:
-                D11 = prop.compute_distance([distance])
-                D12 = prop.compute_distance([[distance[0]+1,distance[1]]])
-                D21 = prop.compute_distance([[distance[0],distance[1]+3]])
-                D22 = prop.compute_distance([[distance[0]+1,distance[1]+3]])
-                D31 = prop.compute_distance([[distance[0],distance[1]+4]])
-                D32 = prop.compute_distance([[distance[0]+1,distance[1]+4]])
-                D41 = prop.compute_distance([[distance[0],distance[1]+6]])
-                D42 = prop.compute_distance([[distance[0]+1,distance[1]+6]])
-                D51 = prop.compute_distance([[distance[0],distance[1]+7]])
-                D52 = prop.compute_distance([[distance[0]+1,distance[1]+7]])
+                D11 = trajectory_properties.compute_distance([distance])
+                D12 = trajectory_properties.compute_distance([[distance[0]+1,distance[1]]])
+                D21 = trajectory_properties.compute_distance([[distance[0],distance[1]+3]])
+                D22 = trajectory_properties.compute_distance([[distance[0]+1,distance[1]+3]])
+                D31 = trajectory_properties.compute_distance([[distance[0],distance[1]+4]])
+                D32 = trajectory_properties.compute_distance([[distance[0]+1,distance[1]+4]])
+                D41 = trajectory_properties.compute_distance([[distance[0],distance[1]+6]])
+                D42 = trajectory_properties.compute_distance([[distance[0]+1,distance[1]+6]])
+                D51 = trajectory_properties.compute_distance([[distance[0],distance[1]+7]])
+                D52 = trajectory_properties.compute_distance([[distance[0]+1,distance[1]+7]])
                 distances = []
                 for i in range(len(D11)):
                     distances.append(min(D11[i],D12[i],D21[i],D22[i],D31[i],D32[i],D41[i],D42[i],D51[i],D52[i]))
                 Distances.append(np.array(distances))
 
             else:
-                Distances.append(prop.compute_distance([distance]))
-
-        trajectory_properties = TrajectoryProperties(traj)
-
+                Distances.append(trajectory_properties.compute_distance([distance]))
+        
         if catalytic_distance is not None:
             residue_indices = trajectory_properties.residue_checker(catalytic_distance)
             for residue_index in residue_indices:
@@ -184,8 +181,8 @@ def main():
                             His_index = int(traj.topology.select("resSeq {} and name HD1 and protein".format(residue_index)))
                         except:
                             His_index = int(traj.topology.select("resSeq {} and name HE2 and protein".format(residue_index)))
-                        D1 = prop.compute_distance([[Asp_index_1, His_index]])
-                        D2 = prop.compute_distance([[Asp_index_2, His_index]])
+                        D1 = trajectory_properties.compute_distance([[Asp_index_1, His_index]])
+                        D2 = trajectory_properties.compute_distance([[Asp_index_2, His_index]])
                         distances = [min(d1, d2) for d1, d2 in zip(D1, D2)]
                         Distances.append(np.array(distances))
                     else:
@@ -194,17 +191,17 @@ def main():
                             His_index = int(traj.topology.select("resSeq {} and name NE2 and protein".format(residue_index)))
                         else:
                             His_index = int(traj.topology.select("resSeq {} and name ND1 and protein".format(residue_index)))
-                        Distances.append(prop.compute_distance([[Ser_index, His_index]]))
+                        Distances.append(trajectory_properties.compute_distance([[Ser_index, His_index]]))
 
 
 
         if angle is not None:
 
-            Angles.append(prop.compute_angles([angle]))
+            Angles.append(trajectory_properties.compute_angles([angle]))
 
         if contact is not None:
 
-            Contacts.append(prop.compute_contacts([contact]))
+            Contacts.append(trajectory_properties.compute_contacts([contact]))
 
     if hbond:
         HB_file = open("H_bond_results.txt","w")
@@ -227,9 +224,9 @@ def main():
         for n, sublist in enumerate(RMSD):
             plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
         plt.title("Global RMSD of the MD simulation"); plt.xlabel("Time (ns)"); plt.ylabel("RMSD (nm)")
+        plt.legend(loc='best')
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_RMSD_plot.png"),dpi=300)
-        plt.legend(loc='best')
         plt.clf()
         execute_plots(x_axis, RMSD_all, "Time (ns)","RMSD (nm)",title = "Global RMSD of the MD simulation",figure_name = "RMSD")
 
@@ -241,6 +238,7 @@ def main():
         for n, sublist in enumerate(LRMSD):
             plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
         plt.title("Local RMSD of the MD simulation in residues {}".format(" ".join(local_rmsd))); plt.xlabel("Time (ns)"); plt.ylabel("RMSD (nm)")
+        plt.legend(loc='best')
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_LocalRMSD_{}_plot.png".format("_".join(local_rmsd))),dpi=300)
         plt.clf()
@@ -252,6 +250,7 @@ def main():
         for n, sublist in enumerate(RMSF):
             plt.plot(Residue_number, sublist, label=f"trajectory_{n}")
         plt.title("RMSF of the MD simulation {}".format(" ".join(local_rmsd))); plt.xlabel("Time (ns)"); plt.ylabel("RMSF (nm)")
+        plt.legend(loc='best')
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_RMSF_traj_plot.png".format("_".join(local_rmsd))),dpi=300)
         plt.clf()
@@ -265,6 +264,7 @@ def main():
         for n, sublist in enumerate(Distances):
             plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
         plt.title("Distance of the MD simulation between atoms {}".format(" and ".join(str(index) for index in distance))); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
+        plt.legend(loc='best')
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_distance_{}_plot.png".format("_".join(str(index) for index in distance))),dpi=300)
         plt.clf()
@@ -279,6 +279,7 @@ def main():
             for n, sublist in enumerate(Distances):
                 plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
             plt.title("Acid-His catalytic distance of the MD simulation"); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
+            plt.legend(loc='best')
             if save_plot:
                 plt.savefig(os.path.join(os.getcwd(), "md_distance_{}_plot.png".format("_".join(str(index) for index in catalytic_distance[1:3]))),dpi=300)
             plt.clf()
@@ -287,6 +288,7 @@ def main():
             for n, sublist in enumerate(Distances):
                 plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
             plt.title("Ser-His catalytic distance of the MD simulation"); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
+            plt.legend(loc='best')
             if save_plot:
                 plt.savefig(os.path.join(os.getcwd(), "md_distance_{}_plot.png".format("_".join(str(index) for index in catalytic_distance[0:2]))),dpi=300)
             plt.clf()
@@ -300,6 +302,7 @@ def main():
         for n, sublist in enumerate(Contacts):
             plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
         plt.title("Distance of the MD simulation between residues {}".format(" and ".join(str(index) for index in contact))); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
+        plt.legend(loc='best')
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_contact_{}_plot.png".format("_".join(str(index) for index in contact))),dpi=300)
         plt.clf()
@@ -313,6 +316,7 @@ def main():
         for n, sublist in enumerate(Angles):
             plt.plot(x_axis[n], sublist, label=f"trajectory_{n}")
         plt.title("Angle of the MD simulation between atoms {}".format(" and ".join(str(index) for index in angle))); plt.xlabel("Time (ns)"); plt.ylabel("Distance ($\AA$)")
+        plt.legend(loc='best')
         if save_plot:
             plt.savefig(os.path.join(os.getcwd(), "md_angle_{}_plot.png".format("_".join(str(index) for index in angle))),dpi=300)
         plt.clf()

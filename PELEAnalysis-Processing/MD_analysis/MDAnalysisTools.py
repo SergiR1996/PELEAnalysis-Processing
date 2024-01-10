@@ -49,13 +49,10 @@ class OpenFiles:
         with open("trajectory_info.txt", "w") as outfile:
             outfile.write(
                 "Number of frames: {}\nnumber of atoms: {}\nnumber of residues: {}\number of chains: {}\n\n".format(
-                    file.n_frames, file.n_atoms, file.n_residues, file.n_chains
-                )
-            )
+                    file.n_frames, file.n_atoms, file.n_residues, file.n_chains))
 
     def number_frames(self, file):
         return file.n_frames
-
 
 
 class directory_manager:
@@ -71,7 +68,6 @@ class directory_manager:
             os.mkdir(self.directory)
         else:
             pass
-
 
 
 class TrajectoryProperties:
@@ -251,7 +247,6 @@ class TrajectoryProperties:
         return list_of_hbonds
 
 
-
 class Plotter:
 
     """
@@ -338,9 +333,4 @@ class Plotter:
 
         if self.plot: plt.show()
         if self.save: plt.savefig(self.path, dpi=self.dpis)
-<<<<<<< HEAD
         plt.clf()
-
-=======
-        plt.clf()
->>>>>>> e4ae316aae66688e9cf81223b0d7ba878b518a49
