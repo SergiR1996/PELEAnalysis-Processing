@@ -17,69 +17,44 @@ __maintainer__ = "Sergi Rodà"
 __email__ = "sergi.rodallordes@bsc.es"
 
 class OpenFiles:
+    """
+    Class created to open the MD files for further analysis
+    """
 
-	"""
-	Class created to open the MD files for the further analysis
-	"""
+    def __init__(self, traj_file, top_file, trr_file=None, file=None):
+        self.traj_file = traj_file
+        self.top_file = top_file
+        self.trr_file = trr_file
+        self.file = file
 
-	def __init__(self, traj_file, top_file, trr_file=None, file=None):
+    def load_xtc(self):
+        trajectories = []
+        if len(self.traj_file) != 0:
+            for traj in self.traj_file:
+                trajectories.append(md.load_xtc(traj, self.top_file))
+        else:
+            trajectories.append(md.load_xtc(self.traj_file, self.top_file))
+        return trajectories
 
-		self.traj_file = traj_file
-		self.top_file = top_file
-		self.trr_file = trr_file
-		self.file = file
+    def load_trr(self):
+        return md.load_trr(self.trr_file, self.top_file)
 
-	def load_xtc(self):
+    def load_trajectory(self):
+        if ".nc" in self.traj_file:
+            return md.load_netcdf(self.traj_file, self.top_file)
+        else:
+            return md.load(self.traj_file, self.top_file)
 
-		"""
-		:param traj_file: Trajectory in xtc file
-		:param top_file: Topology file of such trajectory
-		:return: trajectory loaded
-		"""
+    def information(self, file):
+        with open("trajectory_info.txt", "w") as outfile:
+            outfile.write(
+                "Number of frames: {}\nnumber of atoms: {}\nnumber of residues: {}\number of chains: {}\n\n".format(
+                    file.n_frames, file.n_atoms, file.n_residues, file.n_chains
+                )
+            )
 
-		trajectories = []
-
-		if len(self.traj_file)!=0:
-			for traj in self.traj_file:
-				trajectories.append(md.load_xtc(traj, self.top_file))
-		else:
-			trajectories.append(md.load_xtc(self.traj_file, self.top_file))
-
-		return trajectories
-
-	def load_trr(self):
-
-		"""
-		:param traj_file: Trajectory in trr file
-		:param top_file: Topology file of such trajectory
-		:return: trajectory loaded
-		"""
-
-		return md.load_trr(self.trr_file, self.top_file)
-
-	def load_trajectory(self):
-
-		"""
-		:param traj_file: Trajectory in any format
-		:param top_file: Topology file of such trajectory
-		:return: trajectory loaded
-		"""
-
-		if ".nc" in self.traj_file:
-			return md.load_netcdf(self.traj_file, self.top_file)
-		else:
-			return md.load(self.traj_file, self.top_file)
-
-	def information(self, file):
-
-		with open("trajectory_info.txt", "w") as outfile:
-			outfile.write("Number of frames: {}\nnumber of atoms: {}\nnumber of residues: {}\number of chains: {}\n\n".format(file.n_frames,
-			file.n_atoms, file.n_residues, file.n_chains))
-
-
-	def number_frames(self, file):
-
-		return file.n_frames
+    def number_frames(self, file):
+        return file.n_frames
 
 
 
@@ -124,7 +99,6 @@ class TrajectoryProperties:
 
         return new_metric
 
-
     def radians_to_degrees(func):
 
         """
@@ -138,6 +112,26 @@ class TrajectoryProperties:
 
         return new_metric
 
+    def residue_checker(self, catalytic_distance):
+        residue_indices = []
+        try:
+            topology = self.traj.topology
+            for residue in catalytic_distance:
+                try:
+                    residue_selection = topology.select("resSeq {} and protein".format(residue))
+                    if len(residue_selection) > 0:
+                        residue_name = topology.atom(residue_selection[0]).residue.name
+                        if residue_name in ['SER', 'HIS', 'ASP', 'GLU']:
+                            residue_indices.append(residue_selection[0])
+                        else:
+                            print(f"ERROR--Residue {residue} is not SER-HIS-ASP or GLU---.")
+                    else:
+                        print(f"ERROR--Residue {residue} is not present in the topology---.")
+                except Exception as e:
+                    print(f"Error in residue_checker for residue {residue}: {e}")
+        except Exception as e:
+            print(f"Error in residue_checker: {e}")
+        return residue_indices
 
     #@nanometer_to_angstrom
     def traj_rmsd(self, reference, atom_indices):
@@ -183,7 +177,7 @@ class TrajectoryProperties:
         :return: distances:  np.ndarray, shape=(n_frames, n_pairs); residues_pairs: np.ndarray, shape=(n_pairs, 2)
         """
 
-        return md.compute_contacts(self.traj, residue_pairs)
+        return md.compute_contacts(self.traj, residue_pairs)[0]
 
     @radians_to_degrees
     def compute_angles(self, angle_indices):
@@ -345,3 +339,4 @@ class Plotter:
         if self.plot: plt.show()
         if self.save: plt.savefig(self.path, dpi=self.dpis)
         plt.clf()
+

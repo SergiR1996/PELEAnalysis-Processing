@@ -58,8 +58,6 @@ def parseArgs():
     return args.traj, args.top, args.rmsd, args.rmsf, args.localrmsd, args.distance, args.catalytic_distance, args.epsilon_protonated, args.contact, args.displacement, args.gyration , args.sasa, \
            args.plot_style, args.plot, args.save_plot, args.time, args.acid, args.pickle_name, args.hbond, args.angle
 
-
-
 def main():
 
     def average_property(properties):
@@ -138,6 +136,7 @@ def main():
         if rmsf:
 
             RMSF.append(prop.traj_rmsf(traj,traj.topology.select("name CA")))
+               
 
         if distance is not None:
 
@@ -151,34 +150,38 @@ def main():
             
             else:
                 Distances.append(prop.compute_distance([distance]))
-        
+
+        trajectory_properties = TrajectoryProperties(traj)
+
         if catalytic_distance is not None:
+            residue_indices = trajectory_properties.residue_checker(catalytic_distance)
+            for residue_index in residue_indices:
+                residue_name = traj.topology.atom(residue_index).residue.name
+                if residue_name in ['ASP', 'GLU', 'SER', 'HIS']: 
+                    if acid:
+                        try:
+                            Asp_index_1 = int(traj.topology.select("resSeq {} and name OD1 and protein".format(residue_index)))
+                            Asp_index_2 = int(traj.topology.select("resSeq {} and name OD2 and protein".format(residue_index)))
+                        except:
+                            Asp_index_1 = int(traj.topology.select("resSeq {} and name OE1 and protein".format(residue_index)))
+                            Asp_index_2 = int(traj.topology.select("resSeq {} and name OE2 and protein".format(residue_index)))
+                        try:
+                            His_index = int(traj.topology.select("resSeq {} and name HD1 and protein".format(residue_index)))
+                        except:
+                            His_index = int(traj.topology.select("resSeq {} and name HE2 and protein".format(residue_index)))
+                        D1 = prop.compute_distance([[Asp_index_1, His_index]])
+                        D2 = prop.compute_distance([[Asp_index_2, His_index]])
+                        distances = [min(d1, d2) for d1, d2 in zip(D1, D2)]
+                        Distances.append(np.array(distances))
+                    else:
+                        Ser_index = int(traj.topology.select("resSeq {} and name HG and protein".format(residue_index)))
+                        if not epsilon_protonated:
+                            His_index = int(traj.topology.select("resSeq {} and name NE2 and protein".format(residue_index)))
+                        else:
+                            His_index = int(traj.topology.select("resSeq {} and name ND1 and protein".format(residue_index)))
+                        Distances.append(prop.compute_distance([[Ser_index, His_index]]))
 
-            if acid:
-                try:
-                    Asp_index_1=int(traj.topology.select("resSeq {} and name OD1 and protein".format(catalytic_distance[2])))
-                    Asp_index_2=int(traj.topology.select("resSeq {} and name OD2 and protein".format(catalytic_distance[2])))
-                except:
-                    Asp_index_1=int(traj.topology.select("resSeq {} and name OE1 and protein".format(catalytic_distance[2])))
-                    Asp_index_2=int(traj.topology.select("resSeq {} and name OE2 and protein".format(catalytic_distance[2])))
-                try:
-                    His_index=int(traj.topology.select("resSeq {} and name HD1 and protein".format(catalytic_distance[1])))
-                except:
-                    His_index=int(traj.topology.select("resSeq {} and name HE2 and protein".format(catalytic_distance[1])))
-                D1 = prop.compute_distance([[Asp_index_1,His_index]])
-                D2 = prop.compute_distance([[Asp_index_2,His_index]])
-                distances = []
-                for i in range(len(D1)):
-                    distances.append(min(D1[i],D2[i]))
-                Distances.append(np.array(distances))
 
-            else:
-                Ser_index=int(traj.topology.select("resSeq {} and name HG and protein".format(catalytic_distance[0])))
-                if not epsilon_protonated:
-                    His_index=int(traj.topology.select("resSeq {} and name NE2 and protein".format(catalytic_distance[1])))
-                else:
-                    His_index=int(traj.topology.select("resSeq {} and name ND1 and protein".format(catalytic_distance[1])))
-                Distances.append(prop.compute_distance([[Ser_index,His_index]]))
 
         if angle is not None:
 
