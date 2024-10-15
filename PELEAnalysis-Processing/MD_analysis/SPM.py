@@ -1,5 +1,5 @@
 import mdtraj as md
-import itertools
+import itertools, pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import igraph as ig
@@ -26,6 +26,8 @@ def parseArgs():
                   Distance threshold
         SPM_significance: float
                   SPM significance threshold
+        output: string
+                  Name for the output files
     """
    
     parser = ap.ArgumentParser(description='Script that returns a the most important edges between Ca atoms and the commands to display the Shortest Path Map (SPM) on PyMOL')
@@ -36,13 +38,15 @@ def parseArgs():
     required.add_argument("top", type=str, help="Topology file")
     optional.add_argument("-D","--distance", help="Distance threshold to filter the connection of nodes (in nm)", type=float, default=0.6)
     optional.add_argument("-S","--SPM_significance", help="Shortest Path Map (SPM) significance threshold to filter the most important connection of nodes", type=float, default=0.3)
+    optional.add_argument("-O","--output", help="Name to use for the output file names", default="MDAnalysis")
+
     parser._action_groups.append(optional)
 
     args = parser.parse_args()
 
-    return args.traj, args.top, args.distance, args.SPM_significance
+    return args.traj, args.top, args.distance, args.SPM_significance, args.output
 
-def PyMOL_SMP(central_edges):
+def PyMOL_SMP(central_edges, output):
     """
         Print the commands to have the Shortest Path Map representation in PyMOL
 
@@ -51,9 +55,8 @@ def PyMOL_SMP(central_edges):
         It prints the commands for the PyMOL console
     """
 
-    # Display the filtered central edges and their normalized weights
-    print("Central edges with high frequency scores:")
-    node_weights = {}
+    # Display the filtered central edges and their normalized weights#print("Central edges with high frequency scores:")
+    node_weights, PyMOL_file = {}, open(f"{output}_PyMOL.txt","wt")
     for n, (u, v, weight) in enumerate(central_edges):
         #print(f"Edge ({u}, {v}): normalized weight = {weight:.4f}")
         # Get the coordinates of the Cα atoms (you need to know hw to fetch the Cα atoms for each residue)
@@ -63,15 +66,16 @@ def PyMOL_SMP(central_edges):
         if v not in node_weights:
             node_weights[v] = []
         node_weights[u].append(weight); node_weights[v].append(weight)
-        print(f"sele ca_u, polymer and name CA and resi {u + 1}; sele ca_v, polymer and name CA and resi {v + 1}")
+        PyMOL_file.write(f"sele ca_u, polymer and name CA and resi {u + 1}; sele ca_v, polymer and name CA and resi {v + 1}\n")
 
         # Draw a line (or cylinder) between the two residues with weight mapped to thickness/color
-        print(f"distance dist_nodes_{n}, ca_u, ca_v; set dash_radius, {weight}, dist_nodes_{n}")
+        PyMOL_file.write(f"distance dist_nodes_{n}, ca_u, ca_v; set dash_radius, {weight}, dist_nodes_{n}\n")
 
     for node in node_weights:
-        print(f"sele node_ca, polymer and name CA and resi {node + 1}; set sphere_scale, {np.mean(node_weights[node])}, node_ca; show spheres, node_ca")
+        PyMOL_file.write(f"sele node_ca, polymer and name CA and resi {node + 1}; set sphere_scale, {np.mean(node_weights[node])}, node_ca; show spheres, node_ca\n")
 
-    print("set dash_gap, 0; set dash_color, black")
+    PyMOL_file.write("set dash_gap, 0; set dash_color, black")
+    PyMOL_file.close()
 
 def load_traj(traj_file, top_file):
     trajectories = []
@@ -84,7 +88,7 @@ def load_traj(traj_file, top_file):
 
 def main():
     # Load the trajectory and topology
-    trj_str,top_str, distance_threshold, SPM_significance_threshold = parseArgs()
+    trj_str,top_str, distance_threshold, SPM_significance_threshold, output = parseArgs()
     trjs = load_traj(trj_str, top_str)#trj = md.load(trj_str, top = top_str)
     trj = md.join(trjs)
     ca_atoms = trjs[0].topology.select('name CA') #ca_atoms = trj.topology.select('name CA')
@@ -110,12 +114,15 @@ def main():
 
     # Create the correlation matrix by normalizing the covariance matrix
     correlation_matrix = covariance_matrix / np.outer(stddev, stddev)
-
+    np.savetxt(f'{output}_CorrMat.txt', correlation_matrix)
+    with open(f'{output}_CorrMat.npy', 'wb') as Corr_Matf:
+        np.save(Corr_Matf, correlation_matrix)
+    
     # Plot the correlation matrix
     plt.imshow(correlation_matrix, cmap='coolwarm', vmin=-1, vmax=1)
     plt.colorbar(label='Correlation')
     plt.title('Positional Correlation Matrix')
-    plt.savefig(f"{trj_str[0].split('.')[0]}_CorrMat.png", dpi=300)
+    plt.savefig(f"{output}_CorrMat.png", dpi=300)
 
     ## Alternative option to get the correlation matrix
     # Perform PCA using MDTraj
@@ -131,6 +138,9 @@ def main():
     mean_distances = np.mean(distances, axis=0)
     n_shape = mean_distances.size; m_shape = int(np.sqrt(n_shape))
     distance_matrix = mean_distances.reshape(m_shape, m_shape)
+    np.savetxt(f'{output}_DistMat.txt', distance_matrix)
+    with open(f'{output}_DistMat.npy', 'wb') as DistMatf:
+        np.save(DistMatf, correlation_matrix)
     #distance_matrix = np.zeros((num_atoms, num_atoms))
 
     # Plot the mean distance matrix
@@ -140,7 +150,7 @@ def main():
     plt.title('Inter-Residue Mean Distance Matrix')
     plt.xlabel('Residue Index')
     plt.ylabel('Residue Index')
-    plt.savefig(f"{trj_str[0].split('.')[0]}_DistMat.png", dpi=300)
+    plt.savefig(f"{output}_DistMat.png", dpi=300)
 
     ### Make the SPM ###
 
@@ -199,7 +209,7 @@ def main():
     ig.plot(
         g,
         target=ax,
-        layout='circle',
+        layout='auto',
         vertex_color='steelblue',
         vertex_label=range(g.vcount()),#    edge_width=g.es['weight'],
         edge_label=g.es["normalized_weight"],
@@ -207,9 +217,14 @@ def main():
         edge_align_label=True,
         edge_background='white'
     )
-    plt.savefig(f"{trj_str[0].split('.')[0]}_SPM.png", dpi=300)
+    plt.savefig(f"{output}_SPM.png", dpi=300)
 
-    PyMOL_SMP(central_edges)
+    graph_inf = open(f"{output}_graph.pkl", "wb")
+    pickle.dump(g, graph_inf); graph_inf.close()
+    cedges_inf = open(f"{output}_centraledges.pkl", "wb")
+    pickle.dump(central_edges, cedges_inf); cedges_inf.close()
+
+    PyMOL_SMP(central_edges, output)
 
 if __name__ == "__main__":
     """Call the main function"""
