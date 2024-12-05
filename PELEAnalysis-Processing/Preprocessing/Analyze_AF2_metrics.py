@@ -1,7 +1,8 @@
 import pickle
 import numpy as np
-import math
+import math, itertools
 import pandas as pd
+import mdtraj as md
 import sys, glob, os
 import seaborn as sns
 import operator as op
@@ -122,25 +123,13 @@ def ramachandran_angles(pdb):
     return score
 
 # Function to calculate steric clashes (atoms that are too close)
-def calculate_clashes(pdb, cutoff=2.0):
-    clash_count = 0
-    atom_list = []
-    parser = PDB.PDBParser(QUIET=True)
-    structure = parser.get_structure("protein", pdb)
-
-    for model in structure:
-        for chain in model:
-            for residue in chain:
-                for atom in residue:
-                    atom_list.append(atom)
-                    
-    for i in range(len(atom_list)):
-        for j in range(i+1, len(atom_list)):
-            atom_i = atom_list[i]
-            atom_j = atom_list[j]
-            distance = atom_i - atom_j  # calculate distance between atoms
-            if distance < cutoff:  # If atoms are too close, it's a clash
-                clash_count += 1
+def calculate_clashes(pdb, cutoff=0.3):
+    struct = md.load_pdb(pdb)
+    ca_atoms = struct.topology.select('name CA')
+    ca_atom_pairs = np.array(list(itertools.product(ca_atoms, ca_atoms)))
+    distances_aux = md.compute_distances(trj, atom_pairs=ca_atom_pairs)
+    distances = distances_aux[distances_aux != 0]
+    clash_count = distances[distances < cutoff].shape[0]
                 
     return clash_count
 
