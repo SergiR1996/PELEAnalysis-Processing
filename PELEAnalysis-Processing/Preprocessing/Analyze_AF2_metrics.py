@@ -46,7 +46,7 @@ ALLOWED_REGIONS_PPRO = [
     (-90, -40, -140, 140)  # A wider range for allowed regions
 ]
 
-npz_file_path = "/shared/work/sroda/gaussian_density.npz"
+npz_file_path = "gaussian_density.npz"
 npz_file = np.load(npz_file_path)
 reference_map = npz_file["general"]
 reference_map_gly = npz_file["gly"]
