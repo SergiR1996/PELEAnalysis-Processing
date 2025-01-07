@@ -28,6 +28,10 @@ def parseArgs():
                   SPM significance threshold
         output: string
                   Name for the output files
+        corr_mat: string
+                  Filename of the precomputed correlation matrix (.npy)
+        dist_mat: string
+                  Filename of the precomputed distance matrix (.npy)
     """
    
     parser = ap.ArgumentParser(description='Script that returns a the most important edges between Ca atoms and the commands to display the Shortest Path Map (SPM) on PyMOL')
@@ -39,12 +43,15 @@ def parseArgs():
     optional.add_argument("-D","--distance", help="Distance threshold to filter the connection of nodes (in nm)", type=float, default=0.6)
     optional.add_argument("-S","--SPM_significance", help="Shortest Path Map (SPM) significance threshold to filter the most important connection of nodes", type=float, default=0.3)
     optional.add_argument("-O","--output", help="Name to use for the output file names", default="MDAnalysis")
+    optional.add_argument("--corr_mat", help="Filename of the precomputed correlation matrix (.npy)", type=str, default=None)
+    optional.add_argument("--dist_mat", help="Filename of the precomputed distance matrix (.npy)", type=str, default=None)
+
 
     parser._action_groups.append(optional)
 
     args = parser.parse_args()
 
-    return args.traj, args.top, args.distance, args.SPM_significance, args.output
+    return args.traj, args.top, args.distance, args.SPM_significance, args.output, args.corr_mat, args.dist_mat
 
 def PyMOL_SMP(central_edges, output):
     """
@@ -88,69 +95,75 @@ def load_traj(traj_file, top_file):
 
 def main():
     # Load the trajectory and topology
-    trj_str,top_str, distance_threshold, SPM_significance_threshold, output = parseArgs()
-    trjs = load_traj(trj_str, top_str)#trj = md.load(trj_str, top = top_str)
-    trj = md.join(trjs)
-    ca_atoms = trjs[0].topology.select('name CA') #ca_atoms = trj.topology.select('name CA')
-    num_atoms = len(ca_atoms)
-
-    # Align trajectory to the first frame using C-alpha atoms (for example)
-    trj.superpose(trj, 0, atom_indices=ca_atoms)
-
-    # Reshape to a 2D array (frames, atom_coordinates) using C-alpha atoms
-    positions = trj.xyz[:, ca_atoms, :].reshape(trj.n_frames, -1) # traj.xyz.reshape(traj.n_frames, -1)
-
-    # Calculate the mean over all frames
-    mean_positions = np.mean(positions, axis=0)
-
-    # Subtract the mean positions to get fluctuations
-    fluctuations = positions - mean_positions
-
-    # Calculate the covariance matrix
-    covariance_matrix = np.cov(fluctuations.T)
-
-    # Get the standard deviations (square root of the diagonal elements)
-    stddev = np.sqrt(np.diag(covariance_matrix))
-
-    # Create the correlation matrix by normalizing the covariance matrix
-    correlation_matrix = covariance_matrix / np.outer(stddev, stddev)
-    np.savetxt(f'{output}_CorrMat.txt', correlation_matrix)
-    with open(f'{output}_CorrMat.npy', 'wb') as Corr_Matf:
-        np.save(Corr_Matf, correlation_matrix)
+    trj_str,top_str, distance_threshold, SPM_significance_threshold, output, corr_mat, dist_mat = parseArgs()
     
-    # Plot the correlation matrix
-    plt.imshow(correlation_matrix, cmap='coolwarm', vmin=-1, vmax=1)
-    plt.colorbar(label='Correlation')
-    plt.title('Positional Correlation Matrix')
-    plt.savefig(f"{output}_CorrMat.png", dpi=300)
+    if corr_mat and dist_mat:
+        correlation_matrix = np.load(corr_mat)
+        distance_matrix = np.load(dist_mat)
+        num_atoms = distance_matrix.shape[0]
+    else:
+        trjs = load_traj(trj_str, top_str)#trj = md.load(trj_str, top = top_str)
+        trj = md.join(trjs)
+        ca_atoms = trjs[0].topology.select('name CA') #ca_atoms = trj.topology.select('name CA')
+        num_atoms = len(ca_atoms)
 
-    ## Alternative option to get the correlation matrix
-    # Perform PCA using MDTraj
-    #pca = md.compute_pca(traj, n_components=5)
-    # Access the PCA results
-    #print(pca[0])  # First principal component
+        # Align trajectory to the first frame using C-alpha atoms (for example)
+        trj.superpose(trj, 0, atom_indices=ca_atoms)
 
-    # Calculate the distance matrix
-    ca_atom_pairs = np.array(list(itertools.product(ca_atoms, ca_atoms)))
-    distances = md.compute_distances(trj, atom_pairs=ca_atom_pairs)  # = md.compute_distances(trj, atom_pairs=np.arange(trj.top.n_atoms))
-    #contact_map = md.compute_contacts(traj, contacts='all', threshold=0.5)[0]
-    # Compute the mean distance across all frames
-    mean_distances = np.mean(distances, axis=0)
-    n_shape = mean_distances.size; m_shape = int(np.sqrt(n_shape))
-    distance_matrix = mean_distances.reshape(m_shape, m_shape)
-    np.savetxt(f'{output}_DistMat.txt', distance_matrix)
-    with open(f'{output}_DistMat.npy', 'wb') as DistMatf:
-        np.save(DistMatf, correlation_matrix)
-    #distance_matrix = np.zeros((num_atoms, num_atoms))
+        # Reshape to a 2D array (frames, atom_coordinates) using C-alpha atoms
+        positions = trj.xyz[:, ca_atoms, :].reshape(trj.n_frames, -1) # traj.xyz.reshape(traj.n_frames, -1)
 
-    # Plot the mean distance matrix
-    plt.figure()
-    plt.imshow(distance_matrix, cmap='viridis', interpolation='none')
-    plt.colorbar(label='Mean Distance (nm)')
-    plt.title('Inter-Residue Mean Distance Matrix')
-    plt.xlabel('Residue Index')
-    plt.ylabel('Residue Index')
-    plt.savefig(f"{output}_DistMat.png", dpi=300)
+        # Calculate the mean over all frames
+        mean_positions = np.mean(positions, axis=0)
+
+        # Subtract the mean positions to get fluctuations
+        fluctuations = positions - mean_positions
+
+        # Calculate the covariance matrix
+        covariance_matrix = np.cov(fluctuations.T)
+
+        # Get the standard deviations (square root of the diagonal elements)
+        stddev = np.sqrt(np.diag(covariance_matrix))
+
+        # Create the correlation matrix by normalizing the covariance matrix
+        correlation_matrix = covariance_matrix / np.outer(stddev, stddev)
+        np.savetxt(f'{output}_CorrMat.txt', correlation_matrix)
+        with open(f'{output}_CorrMat.npy', 'wb') as Corr_Matf:
+            np.save(Corr_Matf, correlation_matrix)
+        
+        # Plot the correlation matrix
+        plt.imshow(correlation_matrix, cmap='coolwarm', vmin=-1, vmax=1)
+        plt.colorbar(label='Correlation')
+        plt.title('Positional Correlation Matrix')
+        plt.savefig(f"{output}_CorrMat.png", dpi=300)
+
+        ## Alternative option to get the correlation matrix
+        # Perform PCA using MDTraj
+        #pca = md.compute_pca(traj, n_components=5)
+        # Access the PCA results
+        #print(pca[0])  # First principal component
+
+        # Calculate the distance matrix
+        ca_atom_pairs = np.array(list(itertools.product(ca_atoms, ca_atoms)))
+        distances = md.compute_distances(trj, atom_pairs=ca_atom_pairs)  # = md.compute_distances(trj, atom_pairs=np.arange(trj.top.n_atoms))
+        #contact_map = md.compute_contacts(traj, contacts='all', threshold=0.5)[0]
+        # Compute the mean distance across all frames
+        mean_distances = np.mean(distances, axis=0)
+        n_shape = mean_distances.size; m_shape = int(np.sqrt(n_shape))
+        distance_matrix = mean_distances.reshape(m_shape, m_shape)
+        np.savetxt(f'{output}_DistMat.txt', distance_matrix)
+        with open(f'{output}_DistMat.npy', 'wb') as DistMatf:
+            np.save(DistMatf, distance_matrix)
+        #distance_matrix = np.zeros((num_atoms, num_atoms))
+
+        # Plot the mean distance matrix
+        plt.figure()
+        plt.imshow(distance_matrix, cmap='viridis', interpolation='none')
+        plt.colorbar(label='Mean Distance (nm)')
+        plt.title('Inter-Residue Mean Distance Matrix')
+        plt.xlabel('Residue Index')
+        plt.ylabel('Residue Index')
+        plt.savefig(f"{output}_DistMat.png", dpi=300)
 
     ### Make the SPM ###
 
