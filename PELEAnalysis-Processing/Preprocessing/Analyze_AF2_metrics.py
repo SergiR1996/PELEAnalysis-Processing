@@ -195,7 +195,7 @@ ramachandran_data, clash_data, pLDDT_total, pLDDT_antigen, pLDDT_antibody, pae_a
 
 for ene_file in ene_files:
      ramachandran_data[ene_file], clash_data[ene_file], pLDDT_total[ene_file], pLDDT_antigen[ene_file], pLDDT_antibody[ene_file], pae_antigen[ene_file], pae_antibody[ene_file], pae_interaction_antigen[ene_file], pae_interaction_antibody[ene_file], pae_interaction[ene_file], iptm[ene_file] = [], [], [], [], [], [], [], [], [], [], []
-     PDBs = [f"{sys.argv[1]}/{ene_file}/ranked_{n}.pdb" for n in range(0,25)]
+     PDBs = [i for i in glob.glob(f"{sys.argv[1]}/{ene_file}/ranked*.pdb")]
      pool = mp.Pool(int(sys.argv[4]))
      pLDDT_total[ene_file], pLDDT_antigen[ene_file], pLDDT_antibody[ene_file], pae_antigen[ene_file], pae_antibody[ene_file], pae_interaction_antigen[ene_file], pae_interaction_antibody[ene_file], pae_interaction[ene_file], iptm[ene_file] = zip(*pool.map(generate_scoredict,glob.glob(f"{sys.argv[1]}/{ene_file}/result*pkl")))
      ramachandran_data[ene_file] = pool.map(ramachandran_angles,PDBs)
