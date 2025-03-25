@@ -4,7 +4,7 @@
 # Global imports
 from __future__ import unicode_literals
 import os
-import glob
+import glob, json
 import pickle
 import argparse as ap
 import pandas as pd
@@ -14,7 +14,7 @@ import multiprocessing as mp
 # Plot imports
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use("tkagg")
+matplotlib.use("agg")
 import seaborn as sns
 
 # Local imports
@@ -34,7 +34,7 @@ class PELEAnalyzer():
 
         self.reports, self.output_path, self.window_size, self.to_drop,\
         self.catalytic_dict, self.verbose, self.perform_plots, self.violin_plots,\
-        self.num_steps, self.n_processors, self.KT,self.analysis,self.separation  = self.parseArgs()
+        self.num_steps, self.n_processors, self.KT,self.separation  = self.parseArgs()
 
     def parseArgs(self):
         """
@@ -84,8 +84,6 @@ class PELEAnalyzer():
                               help="number of processors to execute the code", default = 4)
         optional.add_argument("-KT","--Boltzmann_constant", metavar="FLOAT",type=float,
                               help="Boltzmann constant and temperature value for the probabilities", default = 0.593)
-        optional.add_argument("-A","--analysis", metavar="STRING",type=str,
-                              help="Type of analysis to perform", default="CATE")
         optional.add_argument("-S","--separation", metavar="STRING", type=str,
                               help="Type of delimiter between columns of the report file", default="    ")
         parser._action_groups.append(optional)
@@ -94,11 +92,11 @@ class PELEAnalyzer():
         reports = parseReports(args.input, parser)
 
         with open(args.catalytic_json) as json_data:
-            catalytic_dict = json.loads(json_data)
+            catalytic_dict = json.load(json_data)
 
         return reports, args.output, args.window_size, \
         args.to_drop, catalytic_dict, args.verbose, args.perform_plots,\
-        args.violin_plots, args.num_steps, args.n_processors, args.Boltzmann_constant, args.analysis, args.separation
+        args.violin_plots, args.num_steps, args.n_processors, args.Boltzmann_constant, args.separation
 
     def DecompressList(self,l_of_lists):
         """
@@ -156,7 +154,7 @@ class PELEAnalyzer():
 
         return  Total_CE
 
-    def filter_dataframe(df: pd.DataFrame, conditions: dict) -> pd.DataFrame:
+    def filter_dataframe(self, df):
         """
         Filters the DataFrame based on dynamic conditions provided as a dictionary.
         
@@ -219,7 +217,7 @@ class PELEAnalyzer():
         rep.dropna(axis=1,inplace=True)
         values_aux.append(rep.values.tolist())
 
-        catalytic_series, catalytic_boolean = filter_dataframe(rep, self.catalytic_dict)
+        catalytic_series, catalytic_boolean = self.filter_dataframe(rep)
         Total_CE = self.Calculate_total_catalytic_events(catalytic_boolean, rep, num_steps)
         CE = catalytic_series.shape[0]
         cat_events.append(CE)
@@ -234,77 +232,6 @@ class PELEAnalyzer():
         non_catalytic_series = rep.loc[~rep.index.isin(catalytic_indexes)]
 
         return values_aux, cat_events, cat_trajectories, rep.shape[0], total_catalytic_events, total_num_steps, list(rep["BindingEnergy"]), list(catalytic_series["BindingEnergy"]), list(non_catalytic_series["BindingEnergy"]), list(rep["currentEnergy"]), list(catalytic_series["currentEnergy"]), list(non_catalytic_series["currentEnergy"])
-  
-    def Time_of_residence_and_number_of_entrances(self, report):
-        """
-        Take the PELE simulation report files and obtains the number of steps with 
-        a distance (metric) smaller than a threshold and the number of times in the
-        simulation the the value of the desired metric gets lower than the threshold
-
-        RETURNS
-        -------
-        instances: integer
-                      Number of inside steps
-        entrance: integer
-                      Number of entrances        
-        """
-
-        inside_bool, instances, entrance, Nsteps = False,[],0,[]
-
-        rep = pd.read_csv(report,sep=self.separation)
-        logfilename = "/".join(report.split("/")[:-1])+"/logFile_"+report.split("/")[-1].split("metric")[0][-3:].replace("_","").replace("t","")+".txt"
-        if os.path.isfile(logfilename):
-            logfile = open(logfilename, "rt")
-            for line in logfile:
-                if "New Step" in line:
-                    num_steps = int(line.split()[-1])
-        if self.num_steps != 0:
-            num_steps = self.num_steps
-        Nsteps.append(num_steps)
-        rep.dropna(axis=1,inplace=True)
-        step_in,i_aux,entrance_aux,instances_aux = 0,0,0,0
-        for i_row in range(1,rep.shape[0]):
-            if rep.loc[i_row][self.column_number] < self.threshold and inside_bool == False and i_row != (rep.shape[0]-1):
-            # If the distance goes below the threshold and the previous step was above it, execute this
-                if i_row != 1:
-                    if (rep.loc[i_row][1] - i_aux) >= self.window_size and i_aux !=0: 
-                        entrance_aux+=1
-                    elif i_aux == 0 or entrance_aux == 0:
-                        entrance_aux+=1
-                    instances_aux+=1
-                else:
-                    instances_aux+=(rep.loc[i_row][1]-rep.loc[i_row-1][1])
-                step_in = rep.loc[i_row][1]
-                inside_bool = True
-            elif rep.loc[i_row][self.column_number] < self.threshold and inside_bool == False and i_row == (rep.shape[0]-1):
-            # Else if the distance goes below the threshold and this is the last accepted step, execute this
-                instances_aux+=(num_steps-rep.loc[i_row][1])
-                if (rep.loc[i_row][1] - i_aux) >= self.window_size and i_aux !=0:
-                    entrance_aux+=1
-                elif i_aux == 0 or entrance_aux == 0:
-                    entrance_aux+=1
-                instances.append(instances_aux)
-            elif rep.loc[i_row][self.column_number] < self.threshold and inside_bool == True and i_row != (rep.shape[0]-1):
-            # Else if the distance goes below the threshold but the previous step was already below it, execute this
-                instances_aux+=(rep.loc[i_row][1]-rep.loc[i_row-1][1])
-                step_in = rep.loc[i_row][1]
-            elif rep.loc[i_row][self.column_number] > self.threshold and inside_bool == True:
-            # Else if the distance goes above the threshold and the previous step was below it, execute this
-                instances_aux+=(rep.loc[i_row][1]-rep.loc[i_row-1][1]-1)
-                instances.append(instances_aux)
-                instances_aux=0
-                inside_bool = False
-                i_aux = rep.loc[i_row][1]
-            elif rep.loc[i_row][self.column_number] < self.threshold and inside_bool == True and i_row == (rep.shape[0]-1):
-            # Else if the distance goes below the threshold but the previous step was already below it and it is the last step, execute this
-                instances_aux+=(num_steps-step_in)
-                instances.append(instances_aux)
-            else:
-                inside_bool = False
-        entrance+=entrance_aux
-        inside_bool = False
-
-        return instances, entrance, Nsteps
 
     def CATE_plot(self, values, column_names):
         """
@@ -419,7 +346,7 @@ class PELEAnalyzer():
         column_names.append("total_cat_events (%)")
         column_names.append("Catalytic Free Binding Energy");column_names.append("Non-Catalytic Free Binding Energy")
         column_names.append("Difference in Free Binding Energy")
-        means += [n.sum(cat_events,axis=0),n.sum(cat_trajectories,axis=0),100*n.sum(cat_events,axis=0)/n.sum(total_accepted_steps,axis=0),n.sum(total_cat_events,axis=0),100*n.sum(total_cat_events,axis=0)/(total_num_steps),Ebc,Ebnc,dEbc_dEbnc]
+        means += [n.sum(cat_events),n.sum(cat_trajectories),100*n.sum(cat_events)/n.sum(total_accepted_steps),n.sum(total_cat_events),100*n.sum(total_cat_events)/(total_num_steps),Ebc,Ebnc,dEbc_dEbnc]
         std += ["-","-","-","-","-","-","-","-"]
 
         for key,item,second_item in zip(column_names,means,std):
@@ -430,66 +357,16 @@ class PELEAnalyzer():
         df = df.round(3)
         df.to_csv(self.output_path+".csv")
 
-        output_file = open("{self.output_path}_catalytic_events.txt", "wt")
+        output_file = open(f"{self.output_path}_catalytic_events.txt", "wt")
         output_file.write(f"\nNumber of accepted catalytic events in all groups: {n.sum(cat_events)}\n")
         output_file.write(f"Relative frequency of accepted catalytic events in all groups: {round(100*n.sum(cat_events)/n.sum(total_accepted_steps),3)} %\n")
         output_file.write(f"Number of total catalytic events in all groups: {n.sum(total_cat_events)}\n")
         output_file.write(f"Relative frequency of total catalytic events in all groups: {round(100*n.sum(total_cat_events) / (total_num_steps), 3)} %\n")
 
-    def TRNE(self):
-        """
-        Function to calculate the time of residence, the inside steps, and the number of entrances
-
-        It is called when this script is the main program called by the interpreter
-        """
-
-        results,instances,entrance,Nsteps = [],[],0,[]
-
-        logfilename = "/".join(self.reports[0].split("/")[:-1])+"/logFile_"+self.reports[0].split("/")[-1].split("metric")[0][-3:].replace("_","").replace("t","")+".txt"
-
-        if not os.path.isfile(logfilename) and self.num_steps == 0:
-            raise ValueError("Logfiles are missing, use the num_of_steps flag instead")
-
-        pool = mp.Pool(self.n_processors)
-        results.append(pool.map(self.Time_of_residence_and_number_of_entrances,self.reports))
-        pool.terminate()
-
-        results = self.DecompressList(results)
-
-        for elem in results:
-            if len(elem[0])!=0:
-                instances.append(elem[0])
-            entrance += elem[1]
-            Nsteps.append(elem[2])
-
-        instances = self.DecompressList(instances)
-        num_steps = n.mean(Nsteps)
-
-        if self.perform_plots:
-            if self.violin_plots:
-                sns.violinplot(["Residence time" for i in instances], instances, flierprops={"marker":"o", "markerfacecolor":"darkgrey", "markeredgecolor":"k", "markersize":10})
-            else:
-                sns.boxplot(["Residence time" for i in instances], instances, flierprops={"marker":"o", "markerfacecolor":"darkgrey", "markeredgecolor":"k", "markersize":10})
-            plt.savefig(self.output_path+"_TR");plt.close()
-            inf_NI = open(f"{self.output_path}_NI.pkl", "wb"); pickle.dump(instances, inf_NI); pickle.dump(["Residence time" for i in instances], inf_NI); inf_NI.close()
-
-        output_file = open(f"{self.output_path}.txt","wt")
-        output_file.write(f"Number of inside steps: {n.sum(instances)}\n")
-        output_file.write(f"Inside events: {len(instances)}\n")
-        output_file.write(f"Residence time: {n.mean(instances,axis=0)}\n")
-        output_file.write(f"Relative residence time: {(100*n.mean(instances,axis=0))/(num_steps)}\n")
-        output_file.write(f"Number of entrances: {entrance}\n")
-
 if __name__ == "__main__":
     """Call the main function"""
     PELEanalyzer = PELEAnalyzer()
-    if PELEanalyzer.analysis.upper() == "TRNE":
-        if not os.path.exists("TRNE_"+PELEanalyzer.output_path):
-            os.mkdir("TRNE_"+PELEanalyzer.output_path)
-        PELEanalyzer.TRNE()
-        os.system(f"mv {PELEanalyzer.output_path}*.* TRNE_{PELEanalyzer.output_path}/")
-    if PELEanalyzer.analysis.upper() == "CATE":
-        if not os.path.exists("CATE_"+PELEanalyzer.output_path):
-            os.mkdir("CATE_"+PELEanalyzer.output_path)
+    if not os.path.exists(PELEanalyzer.output_path):
+        os.mkdir(PELEanalyzer.output_path)
         PELEanalyzer.CATE()
-        os.system(f"mv {PELEanalyzer.output_path}*.* CATE_{PELEanalyzer.output_path}/")
+        os.system(f"mv {PELEanalyzer.output_path}*.* {PELEanalyzer.output_path}/")
