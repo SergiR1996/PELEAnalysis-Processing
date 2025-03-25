@@ -171,7 +171,7 @@ class PELEAnalyzer():
         query_list = []
 
         filtered_boolean = df["#Task"]==1
-        for col, cond in conditions.items():
+        for col, cond in self.catalytic_dict.items():
             filtered_boolean = filtered_boolean & (df[col] <= cond)
             # Check if the condition is a tuple with an operator and a value.
             operator = "<="
@@ -231,7 +231,7 @@ class PELEAnalyzer():
         catalytic_indexes = catalytic_series.index.values.tolist()
         non_catalytic_series = rep.loc[~rep.index.isin(catalytic_indexes)]
 
-        return values_aux, cat_events, cat_trajectories, rep.shape[0], total_catalytic_events, total_num_steps, list(rep["BindingEnergy"]), list(catalytic_series["BindingEnergy"]), list(non_catalytic_series["BindingEnergy"]), list(rep["currentEnergy"]), list(catalytic_series["currentEnergy"]), list(non_catalytic_series["currentEnergy"])
+        return values_aux, cat_events, cat_trajectories, rep.shape[0], total_catalytic_events, total_num_steps, list(rep["bindingEnergy"]), list(catalytic_series["bindingEnergy"]), list(non_catalytic_series["bindingEnergy"]), list(rep["currentEnergy"]), list(catalytic_series["currentEnergy"]), list(non_catalytic_series["currentEnergy"])
 
     def CATE_plot(self, values, column_names):
         """
@@ -368,5 +368,5 @@ if __name__ == "__main__":
     PELEanalyzer = PELEAnalyzer()
     if not os.path.exists(PELEanalyzer.output_path):
         os.mkdir(PELEanalyzer.output_path)
-        PELEanalyzer.CATE()
-        os.system(f"mv {PELEanalyzer.output_path}*.* {PELEanalyzer.output_path}/")
+    PELEanalyzer.CATE()
+    os.system(f"mv {PELEanalyzer.output_path}*.* {PELEanalyzer.output_path}/")
