@@ -161,31 +161,42 @@ class PELEAnalyzer():
         Args:
             df (pd.DataFrame): The DataFrame to filter.
             conditions (dict): A dictionary where each key is a column name and the value is either:
-                - A value to filter for equality, or
-                - A tuple (operator, value) for more complex comparisons. 
-                Supported operators include '==', '!=', '>', '<', '>=', '<='.
+                - A tuple with the threshold to use to filter the values in the column name and the logic operator to use.
+                The logic operator can be:
+                    0 or "AND" or "&" -> The condition has to be satisfied.
+                    1 or "OR_B" or "|" -> The condition has to be satisfied or the next one (starts a new parenthesis of OR connected conditions).
+                    2 or "OR" or "_" -> The condition has to be satisfied or the next one. (connects a parenthesis of OR connected conditions).
+                    3 or "OR_E" or ":" -> The condition has to be satisfied or the next one. (ends a parenthesis of OR connected conditions).
+                    4 or "E" or "." -> The condition has to be satisfied. (last conditional statement).
+                    5 or "E_OR" or ";" -> The condition has to be satisfied. (last conditional statement finishing an OR connected condition).
         
         Returns:
             pd.DataFrame: The filtered DataFrame.
         """
-        query_list = []
+        query_str = ""
 
-        filtered_boolean = df["#Task"]==1
         for col, cond in self.catalytic_dict.items():
-            filtered_boolean = filtered_boolean & (df[col] <= cond)
             # Check if the condition is a tuple with an operator and a value.
             operator = "<="
-            value = cond
+            value = cond[0]
             value_str = str(value)
+
+            if cond[1] == 0 or cond[1] == "AND" or cond[1] == "&":
+                query_str += f"`{col}` {operator} {value_str} and "
+            elif cond[1] == 1 or cond[1] == "OR_B" or cond[1] == "|":
+                query_str += f"(`{col}` {operator} {value_str} or "
+            elif cond[1] == 2 or cond[1] == "OR" or cond[1] == "_":
+                query_str += f"`{col}` {operator} {value_str} or "
+            elif cond[1] == 3 or cond[1] == "OR_E" or cond[1] == ":":
+                query_str += f"`{col}` {operator} {value_str}) and "
+            elif cond[1] == 4 or cond[1] == "E" or cond[1] == ".":
+                query_str += f"`{col}` {operator} {value_str}"
+            elif cond[1] == 5 or cond[1] == "E_OR" or cond[1] == ";":
+                query_str += f"`{col}` {operator} {value_str})"
             
-            # Use backticks around the column name in case it contains special characters.
-            query_list.append(f"`{col}` {operator} {value_str}")
-        
-        # Join all condition strings with 'and'
-        query_str = " and ".join(query_list)
-        
         # Use the query method to filter the DataFrame
         filtered_df = df.query(query_str)
+        filtered_boolean = df.index.isin(filtered_df.index)
         return filtered_df, filtered_boolean
 
     def Catalytic_events_and_means(self, report):
